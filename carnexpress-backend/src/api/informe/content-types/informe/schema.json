@@ -1,0 +1,27 @@
+{
+  "kind": "collectionType",
+  "collectionName": "informes",
+  "info": {
+    "singularName": "informe",
+    "pluralName": "informes",
+    "displayName": "Informe"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "tipo": {
+      "type": "string"
+    },
+    "fecha_generacion": {
+      "type": "datetime"
+    },
+    "administrador": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user",
+      "inversedBy": "informes"
+    }
+  }
+}
