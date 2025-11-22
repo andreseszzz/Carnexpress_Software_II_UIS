@@ -37,6 +37,15 @@
       "relation": "oneToMany",
       "target": "api::detalle-pedido.detalle-pedido",
       "mappedBy": "pedido"
+    },
+    "direccion_entrega": {
+      "type": "text"
+    },
+    "telefono_contacto": {
+      "type": "string"
+    },
+    "notas": {
+      "type": "text"
     }
   }
 }
