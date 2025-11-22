@@ -46,8 +46,8 @@ function Checkout() {
 
       // Crear el pedido principal
       const pedidoData = {
-        usuario: user.id,
-        estado: 'pendiente',
+        cliente: user.id,
+        estado: 'solicitado',
         total: total,
         direccion_entrega: formData.direccion,
         telefono_contacto: formData.telefono,
@@ -63,7 +63,6 @@ function Checkout() {
           pedido: pedidoId,
           producto: item.id,
           cantidad: item.cantidad,
-          precio_unitario: item.precio,
           subtotal: item.precio * item.cantidad
         };
         return crearDetallePedido(detalleData, token);

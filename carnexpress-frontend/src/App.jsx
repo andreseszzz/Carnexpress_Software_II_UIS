@@ -7,6 +7,7 @@ import Register from './pages/Register';
 import Catalogo from './pages/Catalogo';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
+import AdminPanel from './pages/AdminPanel';
 import './App.css';
 
 // Componente para proteger rutas
@@ -37,6 +38,22 @@ function App() {
               element={
                 <PrivateRoute>
                   <Cart />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/checkout" 
+              element={
+                <PrivateRoute>
+                  <Checkout />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/admin" 
+              element={
+                <PrivateRoute>
+                  <AdminPanel />
                 </PrivateRoute>
               } 
             />

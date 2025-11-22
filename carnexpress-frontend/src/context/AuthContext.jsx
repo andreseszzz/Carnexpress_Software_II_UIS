@@ -80,7 +80,8 @@ export const AuthProvider = ({ children }) => {
 
   // Verificar si el usuario es administrador
   const isAdmin = () => {
-    return user?.role?.name === 'Administrador' || user?.role?.type === 'administrador';
+    // Verificar por el campo isAdmin
+    return user?.isAdmin === true;
   };
 
   const value = {
@@ -90,7 +91,7 @@ export const AuthProvider = ({ children }) => {
     register,
     logout,
     isAuthenticated: !!token,
-    isAdmin: isAdmin() // Nueva función para verificar si es admin
+    isAdmin: isAdmin()
   };
 
   return (

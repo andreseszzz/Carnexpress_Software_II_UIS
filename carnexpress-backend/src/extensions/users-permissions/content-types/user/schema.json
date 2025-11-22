@@ -77,6 +77,10 @@
       "relation": "oneToMany",
       "target": "api::informe.informe",
       "mappedBy": "administrador"
+    },
+    "isAdmin": {
+      "type": "boolean",
+      "default": false
     }
   }
 }

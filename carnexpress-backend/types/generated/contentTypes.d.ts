@@ -550,6 +550,7 @@ export interface ApiPedidoPedido extends Struct.CollectionTypeSchema {
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    direccion_entrega: Schema.Attribute.Text;
     estado: Schema.Attribute.Enumeration<
       ['solicitado', 'cancelado', 'despachado', 'entregado']
     >;
@@ -564,7 +565,9 @@ export interface ApiPedidoPedido extends Struct.CollectionTypeSchema {
       'api::pedido.pedido'
     > &
       Schema.Attribute.Private;
+    notas: Schema.Attribute.Text;
     publishedAt: Schema.Attribute.DateTime;
+    telefono_contacto: Schema.Attribute.String;
     total: Schema.Attribute.Decimal;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
@@ -1078,6 +1081,7 @@ export interface PluginUsersPermissionsUser
         minLength: 6;
       }>;
     informes: Schema.Attribute.Relation<'oneToMany', 'api::informe.informe'>;
+    isAdmin: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
