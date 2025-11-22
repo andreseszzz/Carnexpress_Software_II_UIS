@@ -224,4 +224,32 @@ export const getDetallesPedido = async (pedidoId, token) => {
   }
 };
 
+// Función para obtener estadísticas de ventas (Admin)
+export const getEstadisticas = async (token) => {
+  try {
+    // Obtener todos los pedidos con detalles
+    const pedidos = await strapiAPI.get('/pedidos?populate=*', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    // Obtener todos los detalles de pedidos con productos
+    const detalles = await strapiAPI.get('/detalle-pedidos?populate=*', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return {
+      pedidos: pedidos.data,
+      detalles: detalles.data
+    };
+  } catch (error) {
+    console.error('Error al obtener estadísticas:', error);
+    throw error;
+  }
+};
+
+
 export default strapiAPI;

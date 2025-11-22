@@ -7,7 +7,9 @@ import Register from './pages/Register';
 import Catalogo from './pages/Catalogo';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
+import MisPedidos from './pages/MisPedidos';
 import AdminPanel from './pages/AdminPanel';
+import Informes from './pages/Informes';
 import './App.css';
 
 // Componente para proteger rutas
@@ -50,10 +52,26 @@ function App() {
               } 
             />
             <Route 
+              path="/mis-pedidos" 
+              element={
+                <PrivateRoute>
+                  <MisPedidos />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
               path="/admin" 
               element={
                 <PrivateRoute>
                   <AdminPanel />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/admin/informes" 
+              element={
+                <PrivateRoute>
+                  <Informes />
                 </PrivateRoute>
               } 
             />

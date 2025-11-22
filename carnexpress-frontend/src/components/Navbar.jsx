@@ -70,6 +70,22 @@ function Navbar() {
               )}
             </button>
 
+            {/* Botón Mis Pedidos */}
+            <button 
+              onClick={() => navigate('/mis-pedidos')}
+              style={{
+                padding: '8px 16px',
+                backgroundColor: '#28a745',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontWeight: 'bold'
+              }}
+            >
+              📦 Mis Pedidos
+            </button>
+
             <span style={{ color: 'white', fontWeight: 'bold' }}>
               {isAdmin ? '👑 Admin' : '👤'} Hola, {user?.username || user?.nombre || 'Usuario'}
             </span>
