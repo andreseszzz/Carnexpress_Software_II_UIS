@@ -118,9 +118,28 @@ function AdminPanel() {
 
   return (
     <div style={{ padding: '20px', maxWidth: '1400px', margin: '0 auto' }}>
-      <h1 style={{ color: 'white', marginBottom: '30px' }}>
+      <h1 style={{ color: 'white', marginBottom: '20px' }}>
         👑 Panel de Administración - Gestión de Pedidos
       </h1>
+
+      {/* Botón para ir a Informes */}
+      <div style={{ marginBottom: '20px' }}>
+        <button
+          onClick={() => navigate('/admin/informes')}
+          style={{
+            padding: '12px 24px',
+            backgroundColor: '#17a2b8',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+            fontSize: '16px'
+          }}
+        >
+          📊 Ver Informes y Estadísticas
+        </button>
+      </div>
 
       {/* Filtros */}
       <div style={{
