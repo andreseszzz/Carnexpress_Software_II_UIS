@@ -1,74 +1,49 @@
-import { useState, useEffect } from 'react';
-import { getProductos } from './api/strapi';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { CartProvider } from './context/CartContext';
+import Navbar from './components/Navbar';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import Catalogo from './pages/Catalogo';
+import Cart from './pages/Cart';
+import Checkout from './pages/Checkout';
 import './App.css';
 
+// Componente para proteger rutas
+function PrivateRoute({ children }) {
+  const { isAuthenticated } = useAuth();
+  return isAuthenticated ? children : <Navigate to="/login" />;
+}
+
 function App() {
-  const [productos, setProductos] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    const fetchProductos = async () => {
-      try {
-        const data = await getProductos();
-        console.log('Datos recibidos:', data); // Para ver qué estamos recibiendo
-        
-        // Validar que data.data existe y es un array
-        if (data && data.data && Array.isArray(data.data)) {
-          setProductos(data.data);
-        } else {
-          setError('No se encontraron productos');
-        }
-        setLoading(false);
-      } catch (error) {
-        console.error('Error:', error);
-        setError('Error al cargar productos: ' + error.message);
-        setLoading(false);
-      }
-    };
-
-    fetchProductos();
-  }, []);
-
-  if (loading) {
-    return <div style={{ padding: '20px', color: 'white' }}>Cargando productos...</div>;
-  }
-
-  if (error) {
-    return <div style={{ padding: '20px', color: 'red' }}>{error}</div>;
-  }
-
-  if (productos.length === 0) {
-    return <div style={{ padding: '20px', color: 'white' }}>No hay productos disponibles</div>;
-  }
-
   return (
-    <div className="App" style={{ padding: '20px' }}>
-      <h1>Productos de Carnexpress</h1>
-      <div className="productos-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '20px' }}>
-        {productos.map((producto) => {
-          // Validar que producto.attributes existe antes de acceder a él
-          if (!producto.attributes) {
-            console.warn('Producto sin attributes:', producto);
-            return null;
-          }
-
-          return (
-            <div key={producto.id} className="producto-card" style={{ 
-              border: '1px solid #ccc', 
-              padding: '15px', 
-              borderRadius: '8px',
-              backgroundColor: 'white'
-            }}>
-              <h3>{producto.attributes.nombre}</h3>
-              <p><strong>Precio:</strong> ${producto.attributes.precio.toLocaleString('es-CO')}</p>
-              <p><strong>Categoría:</strong> {producto.attributes.categoria}</p>
-              <p><strong>Stock:</strong> {producto.attributes.stock ? '✅ Disponible' : '❌ Agotado'}</p>
-            </div>
-          );
-        })}
-      </div>
-    </div>
+    <AuthProvider>
+      <CartProvider>
+        <Router>
+          <Navbar />
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route 
+              path="/" 
+              element={
+                <PrivateRoute>
+                  <Catalogo />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/cart" 
+              element={
+                <PrivateRoute>
+                  <Cart />
+                </PrivateRoute>
+              } 
+            />
+          </Routes>
+        </Router>
+      </CartProvider>
+    </AuthProvider>
   );
 }
 
