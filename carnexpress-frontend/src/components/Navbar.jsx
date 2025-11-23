@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
@@ -8,12 +8,16 @@ function Navbar() {
   const { user, logout, isAdmin } = useAuth();
   const { itemCount } = useCart();
   const navigate = useNavigate();
+  const location = useLocation();
   const [cartOpen, setCartOpen] = useState(false);
+  const [menuMovilOpen, setMenuMovilOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
+
+  const isActive = (path) => location.pathname === path;
 
   if (!user) return null;
 
@@ -32,7 +36,7 @@ function Navbar() {
           backgroundColor: '#000',
           padding: '8px 0',
           fontSize: '13px'
-        }}>
+        }} className="desktop-only">
           <div style={{
             maxWidth: '1200px',
             margin: '0 auto',
@@ -78,7 +82,7 @@ function Navbar() {
             }}>
               🥩
             </div>
-            <div>
+            <div className="desktop-only">
               <div style={{ color: 'white', fontSize: '20px', fontWeight: 'bold', lineHeight: 1 }}>
                 CARNEXPRESS
               </div>
@@ -88,43 +92,80 @@ function Navbar() {
             </div>
           </Link>
 
-          {/* Menú central */}
-          <div style={{ display: 'flex', gap: '30px', alignItems: 'center' }} className="desktop-only">
-            <Link to="/" style={{
+          {/* Menú hamburguesa (móvil) */}
+          <button
+            onClick={() => setMenuMovilOpen(!menuMovilOpen)}
+            style={{
+              display: 'none',
+              background: 'none',
+              border: 'none',
               color: 'white',
-              textDecoration: 'none',
-              fontWeight: '500',
-              borderBottom: '2px solid transparent',
-              paddingBottom: '5px',
-              transition: 'border-color 0.3s'
-            }}>
+              fontSize: '28px',
+              cursor: 'pointer',
+              padding: 0
+            }}
+            className="menu-hamburguesa"
+          >
+            ☰
+          </button>
+
+          {/* Menú central (desktop) */}
+          <div style={{ display: 'flex', gap: '30px', alignItems: 'center' }} className="desktop-only">
+            <Link 
+              to="/" 
+              style={{
+                color: 'white',
+                textDecoration: 'none',
+                fontWeight: '500',
+                borderBottom: isActive('/') ? '2px solid #dc3545' : '2px solid transparent',
+                paddingBottom: '5px',
+                transition: 'border-color 0.3s'
+              }}
+              onMouseEnter={(e) => e.target.style.borderBottom = '2px solid #dc3545'}
+              onMouseLeave={(e) => e.target.style.borderBottom = isActive('/') ? '2px solid #dc3545' : '2px solid transparent'}
+            >
               Inicio
             </Link>
-            <Link to="/productos" style={{
-              color: 'white',
-              textDecoration: 'none',
-              fontWeight: '500',
-              borderBottom: '2px solid #dc3545',
-              paddingBottom: '5px'
-            }}>
+            <Link 
+              to="/productos" 
+              style={{
+                color: 'white',
+                textDecoration: 'none',
+                fontWeight: '500',
+                borderBottom: isActive('/productos') ? '2px solid #dc3545' : '2px solid transparent',
+                paddingBottom: '5px',
+                transition: 'border-color 0.3s'
+              }}
+              onMouseEnter={(e) => e.target.style.borderBottom = '2px solid #dc3545'}
+              onMouseLeave={(e) => e.target.style.borderBottom = isActive('/productos') ? '2px solid #dc3545' : '2px solid transparent'}
+            >
               Productos
             </Link>
-            <Link to="/ofertas" style={{
-              color: 'white',
-              textDecoration: 'none',
-              fontWeight: '500',
-              borderBottom: '2px solid transparent',
-              paddingBottom: '5px',
-              transition: 'border-color 0.3s'
-            }}>
+            <Link 
+              to="/ofertas" 
+              style={{
+                color: 'white',
+                textDecoration: 'none',
+                fontWeight: '500',
+                borderBottom: isActive('/ofertas') ? '2px solid #dc3545' : '2px solid transparent',
+                paddingBottom: '5px',
+                transition: 'border-color 0.3s'
+              }}
+              onMouseEnter={(e) => e.target.style.borderBottom = '2px solid #dc3545'}
+              onMouseLeave={(e) => e.target.style.borderBottom = isActive('/ofertas') ? '2px solid #dc3545' : '2px solid transparent'}
+            >
               Ofertas
             </Link>
           </div>
 
           {/* Acciones derecha */}
           <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
-            {/* Icono de usuario */}
-            <div style={{ position: 'relative', cursor: 'pointer' }}>
+            {/* Icono de usuario (desktop) */}
+            <div 
+              style={{ position: 'relative', cursor: 'pointer' }}
+              className="desktop-only"
+              onClick={() => navigate('/mis-pedidos')}
+            >
               <div style={{
                 width: '40px',
                 height: '40px',
@@ -148,7 +189,8 @@ function Navbar() {
                 border: 'none',
                 cursor: 'pointer',
                 color: 'white',
-                fontSize: '24px'
+                fontSize: '24px',
+                padding: 0
               }}
             >
               🛒
@@ -182,12 +224,116 @@ function Navbar() {
                 borderRadius: '4px',
                 fontWeight: 'bold',
                 fontSize: '14px'
-              }}>
+              }}
+              className="desktop-only">
                 👑 Admin
               </Link>
             )}
           </div>
         </div>
+
+        {/* Menú móvil */}
+        {menuMovilOpen && (
+          <div style={{
+            backgroundColor: '#2a2a2a',
+            padding: '20px',
+            display: 'none'
+          }}
+          className="menu-movil">
+            <Link 
+              to="/" 
+              onClick={() => setMenuMovilOpen(false)}
+              style={{
+                display: 'block',
+                color: 'white',
+                textDecoration: 'none',
+                padding: '12px 0',
+                borderBottom: '1px solid #444',
+                fontWeight: '500'
+              }}
+            >
+              Inicio
+            </Link>
+            <Link 
+              to="/productos" 
+              onClick={() => setMenuMovilOpen(false)}
+              style={{
+                display: 'block',
+                color: 'white',
+                textDecoration: 'none',
+                padding: '12px 0',
+                borderBottom: '1px solid #444',
+                fontWeight: '500'
+              }}
+            >
+              Productos
+            </Link>
+            <Link 
+              to="/ofertas" 
+              onClick={() => setMenuMovilOpen(false)}
+              style={{
+                display: 'block',
+                color: 'white',
+                textDecoration: 'none',
+                padding: '12px 0',
+                borderBottom: '1px solid #444',
+                fontWeight: '500'
+              }}
+            >
+              Ofertas
+            </Link>
+            <Link 
+              to="/mis-pedidos" 
+              onClick={() => setMenuMovilOpen(false)}
+              style={{
+                display: 'block',
+                color: 'white',
+                textDecoration: 'none',
+                padding: '12px 0',
+                borderBottom: '1px solid #444',
+                fontWeight: '500'
+              }}
+            >
+              Mis Pedidos
+            </Link>
+            {isAdmin && (
+              <Link 
+                to="/admin" 
+                onClick={() => setMenuMovilOpen(false)}
+                style={{
+                  display: 'block',
+                  color: '#ffc107',
+                  textDecoration: 'none',
+                  padding: '12px 0',
+                  borderBottom: '1px solid #444',
+                  fontWeight: '500'
+                }}
+              >
+                👑 Admin
+              </Link>
+            )}
+            <button
+              onClick={() => {
+                handleLogout();
+                setMenuMovilOpen(false);
+              }}
+              style={{
+                display: 'block',
+                width: '100%',
+                textAlign: 'left',
+                background: 'none',
+                border: 'none',
+                color: 'white',
+                padding: '12px 0',
+                fontWeight: '500',
+                cursor: 'pointer',
+                fontSize: '16px'
+              }}
+            >
+              Cerrar Sesión
+            </button>
+          </div>
+        )}
       </nav>
 
       {/* Cart Drawer */}

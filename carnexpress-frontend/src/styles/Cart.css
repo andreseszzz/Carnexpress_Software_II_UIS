@@ -1,0 +1,264 @@
+.cart-container {
+  padding: 20px;
+  max-width: 1000px;
+  margin: 0 auto;
+  min-height: 80vh;
+}
+
+.cart-title {
+  color: white;
+  margin-bottom: 20px;
+  font-size: 32px;
+}
+
+/* Mensaje carrito vacío */
+.cart-empty {
+  padding: 20px;
+  text-align: center;
+  color: white;
+}
+
+.cart-empty h2 {
+  margin-bottom: 20px;
+}
+
+.btn-catalogo {
+  margin-top: 20px;
+  padding: 10px 20px;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+/* Lista de items */
+.cart-content {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.cart-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.cart-item:last-child {
+  border-bottom: none;
+}
+
+.cart-item-info {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex: 1;
+}
+
+.cart-item-image {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.cart-item-placeholder {
+  width: 80px;
+  height: 80px;
+  background-color: #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  font-size: 32px;
+}
+
+.cart-item-details h3 {
+  margin: 0 0 5px 0;
+  font-size: 18px;
+}
+
+.cart-item-details p {
+  margin: 0;
+  color: #666;
+}
+
+.cart-item-controls {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.quantity-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-quantity {
+  padding: 5px 12px;
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.btn-quantity.increase {
+  background-color: #28a745;
+}
+
+.quantity-display {
+  font-weight: bold;
+  font-size: 18px;
+  min-width: 30px;
+  text-align: center;
+}
+
+.cart-item-subtotal {
+  min-width: 120px;
+  text-align: right;
+}
+
+.cart-item-subtotal p {
+  margin: 0;
+  font-weight: bold;
+  font-size: 18px;
+  color: #28a745;
+}
+
+.btn-remove {
+  padding: 8px 16px;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+/* Resumen */
+.cart-summary {
+  background-color: white;
+  padding: 30px;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.summary-info p {
+  margin: 0 0 10px 0;
+  font-size: 16px;
+  color: #666;
+}
+
+.summary-total {
+  margin: 0;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.summary-total-amount {
+  color: #28a745;
+}
+
+.summary-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-continuar {
+  padding: 12px 24px;
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.btn-checkout {
+  padding: 12px 24px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+/* Responsive */
+@media screen and (max-width: 768px) {
+  .cart-title {
+    font-size: 24px;
+  }
+
+  .cart-item {
+    flex-direction: column;
+    gap: 15px;
+    padding: 15px;
+  }
+
+  .cart-item-info {
+    width: 100%;
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .cart-item-controls {
+    width: 100%;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .cart-item-subtotal {
+    width: 100%;
+    text-align: center;
+  }
+
+  .cart-summary {
+    flex-direction: column;
+    gap: 20px;
+    text-align: center;
+  }
+
+  .summary-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .btn-continuar,
+  .btn-checkout {
+    width: 100%;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .cart-container {
+    padding: 10px;
+  }
+
+  .cart-item-image,
+  .cart-item-placeholder {
+    width: 60px;
+    height: 60px;
+  }
+
+  .cart-item-details h3 {
+    font-size: 16px;
+  }
+
+  .quantity-controls {
+    justify-content: center;
+  }
+}

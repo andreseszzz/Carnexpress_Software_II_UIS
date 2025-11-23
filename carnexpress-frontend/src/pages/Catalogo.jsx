@@ -1,18 +1,19 @@
 import { useState, useEffect } from 'react';
 import { getProductos } from '../api/strapi';
 import { useCart } from '../context/CartContext';
+import '../styles/Catalogo.css';
 
 function Catalogo() {
   const [productos, setProductos] = useState([]);
-  const [busqueda, setBusqueda] = useState('');
-  const [categoriaSeleccionada, setCategoriaSeleccionada] = useState('todas');
-  const [precioMaximo, setPrecioMaximo] = useState(100000);
+  const [productosFiltrados, setProductosFiltrados] = useState([]);
   const [categorias, setCategorias] = useState([]);
   const [loading, setLoading] = useState(true);
   
-  // Estados de paginación
-  const [paginaActual, setPaginaActual] = useState(1);
-  const productosPorPagina = 6;
+  const [categoriaSeleccionada, setCategoriaSeleccionada] = useState('todas');
+  const [precioMin, setPrecioMin] = useState(0);
+  const [precioMax, setPrecioMax] = useState(100000);
+  const [busqueda, setBusqueda] = useState('');
+  const [ordenar, setOrdenar] = useState('nombre');
   
   const { addToCart } = useCart();
 
@@ -22,9 +23,10 @@ function Catalogo() {
         const data = await getProductos();
         if (data && data.data) {
           setProductos(data.data);
+          setProductosFiltrados(data.data);
           
-          const cats = [...new Set(data.data.map(p => p.categoria))];
-          setCategorias(cats);
+          const categoriasUnicas = [...new Set(data.data.map(p => p.categoria))];
+          setCategorias(categoriasUnicas);
         }
         setLoading(false);
       } catch (error) {
@@ -36,314 +38,209 @@ function Catalogo() {
     fetchProductos();
   }, []);
 
+  useEffect(() => {
+    let resultado = [...productos];
+
+    if (busqueda.trim() !== '') {
+      resultado = resultado.filter(producto =>
+        producto.nombre.toLowerCase().includes(busqueda.toLowerCase())
+      );
+    }
+
+    if (categoriaSeleccionada !== 'todas') {
+      resultado = resultado.filter(p => p.categoria === categoriaSeleccionada);
+    }
+
+    resultado = resultado.filter(p => p.precio >= precioMin && p.precio <= precioMax);
+
+    if (ordenar === 'precio-asc') {
+      resultado.sort((a, b) => a.precio - b.precio);
+    } else if (ordenar === 'precio-desc') {
+      resultado.sort((a, b) => b.precio - a.precio);
+    } else if (ordenar === 'nombre') {
+      resultado.sort((a, b) => a.nombre.localeCompare(b.nombre));
+    }
+
+    setProductosFiltrados(resultado);
+  }, [productos, categoriaSeleccionada, precioMin, precioMax, busqueda, ordenar]);
+
   const handleAgregarAlCarrito = (producto) => {
     addToCart(producto);
-    alert(`✅ ${producto.nombre} agregado al carrito`);
   };
 
   const limpiarFiltros = () => {
-    setBusqueda('');
     setCategoriaSeleccionada('todas');
-    setPrecioMaximo(100000);
-    setPaginaActual(1);
+    setPrecioMin(0);
+    setPrecioMax(100000);
+    setBusqueda('');
+    setOrdenar('nombre');
   };
-
-  // Filtrar productos
-  const productosFiltrados = productos.filter(producto => {
-    const cumpleBusqueda = producto.nombre.toLowerCase().includes(busqueda.toLowerCase());
-    const cumpleCategoria = categoriaSeleccionada === 'todas' || producto.categoria === categoriaSeleccionada;
-    const cumplePrecio = producto.precio <= precioMaximo;
-    
-    return cumpleBusqueda && cumpleCategoria && cumplePrecio;
-  });
-
-  // Calcular paginación
-  const indexUltimo = paginaActual * productosPorPagina;
-  const indexPrimero = indexUltimo - productosPorPagina;
-  const productosPaginados = productosFiltrados.slice(indexPrimero, indexUltimo);
-  const totalPaginas = Math.ceil(productosFiltrados.length / productosPorPagina);
-
-  // Cambiar de página
-  const cambiarPagina = (numeroPagina) => {
-    setPaginaActual(numeroPagina);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  // Resetear a página 1 cuando cambian los filtros
-  useEffect(() => {
-    setPaginaActual(1);
-  }, [busqueda, categoriaSeleccionada, precioMaximo]);
 
   if (loading) {
     return (
-      <div style={{ padding: '20px', color: 'white', textAlign: 'center' }}>
+      <div style={{ 
+        minHeight: '400px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: '#666'
+      }}>
         <h2>Cargando productos...</h2>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: '20px', maxWidth: '1400px', margin: '0 auto' }}>
-      <h1 style={{ color: 'white', marginBottom: '20px' }}>
-        🥩 Carnexpress - Catálogo de Productos
-      </h1>
+    <div className="catalogo-container">
+      <div className="catalogo-header">
+        <div className="catalogo-header-content">
+          <h1 className="catalogo-title">Nuestros Productos</h1>
+          <p className="catalogo-subtitle">
+            Mostrando {productosFiltrados.length} de {productos.length} productos
+          </p>
+        </div>
+      </div>
 
-      <div style={{
-        backgroundColor: 'white',
-        padding: '20px',
-        borderRadius: '8px',
-        marginBottom: '20px',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-      }}>
-        <h3 style={{ marginTop: 0 }}>🔍 Filtros</h3>
-        
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-          gap: '15px',
-          marginBottom: '15px'
-        }}>
-          <div>
-            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-              Buscar:
-            </label>
+      <div className="catalogo-layout">
+        <aside className="catalogo-sidebar">
+          <h3 className="sidebar-title">Filtros</h3>
+
+          <div className="filter-group">
+            <label className="filter-label">Buscar</label>
             <input
               type="text"
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
-              placeholder="Buscar producto..."
-              style={{
-                width: '100%',
-                padding: '10px',
-                fontSize: '14px',
-                borderRadius: '4px',
-                border: '2px solid #ddd',
-                boxSizing: 'border-box'
-              }}
+              placeholder="Buscar productos..."
+              className="filter-input"
             />
           </div>
 
-          <div>
-            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-              Categoría:
-            </label>
+          <div className="filter-group">
+            <label className="filter-label">Categoría</label>
             <select
               value={categoriaSeleccionada}
               onChange={(e) => setCategoriaSeleccionada(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '10px',
-                fontSize: '14px',
-                borderRadius: '4px',
-                border: '2px solid #ddd'
-              }}
+              className="filter-select"
             >
-              <option value="todas">Todas</option>
+              <option value="todas">Todas las categorías</option>
               {categorias.map(cat => (
-                <option key={cat} value={cat}>{cat}</option>
+                <option key={cat} value={cat}>
+                  {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                </option>
               ))}
             </select>
           </div>
 
-          <div>
-            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-              Precio máximo: ${precioMaximo.toLocaleString()}
+          <div className="filter-group">
+            <label className="filter-label">Precio</label>
+            
+            <label className="price-range-label">
+              Mínimo: ${precioMin.toLocaleString()}
             </label>
             <input
               type="range"
               min="0"
               max="100000"
-              step="5000"
-              value={precioMaximo}
-              onChange={(e) => setPrecioMaximo(Number(e.target.value))}
-              style={{ width: '100%' }}
+              step="1000"
+              value={precioMin}
+              onChange={(e) => setPrecioMin(Number(e.target.value))}
+              className="price-slider"
+            />
+
+            <label className="price-range-label" style={{ marginTop: '10px' }}>
+              Máximo: ${precioMax.toLocaleString()}
+            </label>
+            <input
+              type="range"
+              min="0"
+              max="100000"
+              step="1000"
+              value={precioMax}
+              onChange={(e) => setPrecioMax(Number(e.target.value))}
+              className="price-slider"
             />
           </div>
-        </div>
 
-        <div>
-          <button
-            onClick={limpiarFiltros}
-            style={{
-              padding: '8px 16px',
-              backgroundColor: '#dc3545',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontWeight: 'bold',
-              marginRight: '10px'
-            }}
-          >
+          <button onClick={limpiarFiltros} className="btn-limpiar">
             Limpiar Filtros
           </button>
-          <span style={{ color: '#666' }}>
-            Mostrando {productosFiltrados.length} productos
-          </span>
-        </div>
-      </div>
+        </aside>
 
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-        gap: '20px'
-      }}>
-        {productosPaginados.length > 0 ? (
-          productosPaginados.map((producto) => (
-            <div
-              key={producto.id}
-              style={{
-                backgroundColor: 'white',
-                borderRadius: '8px',
-                overflow: 'hidden',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                transition: 'transform 0.2s',
-                cursor: 'pointer'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
-              onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
-            >
-              <div style={{
-                width: '100%',
-                height: '220px',
-                backgroundColor: '#f5f5f5',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                overflow: 'hidden'
-              }}>
-                {producto.imagen?.url ? (
-                  <img
-                    src={`http://localhost:1337${producto.imagen.url}`}
-                    alt={producto.nombre}
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover'
-                    }}
-                  />
-                ) : (
-                  <span style={{ fontSize: '64px' }}>🥩</span>
-                )}
-              </div>
-
-              <div style={{ padding: '15px' }}>
-                <h3 style={{ margin: '0 0 8px 0', fontSize: '18px', color: '#333' }}>
-                  {producto.nombre}
-                </h3>
-                
-                <p style={{ margin: '0 0 12px 0', color: '#666', fontSize: '14px' }}>
-                  📦 {producto.categoria}
-                </p>
-
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  marginTop: '12px'
-                }}>
-                  <span style={{
-                    fontSize: '24px',
-                    fontWeight: 'bold',
-                    color: '#28a745'
-                  }}>
-                    ${producto.precio.toLocaleString()}
-                  </span>
-
-                  <button
-                    onClick={() => handleAgregarAlCarrito(producto)}
-                    style={{
-                      padding: '10px 20px',
-                      backgroundColor: '#dc3545',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      fontWeight: 'bold',
-                      fontSize: '14px'
-                    }}
-                  >
-                    🛒 Agregar
-                  </button>
-                </div>
-              </div>
+        <main className="catalogo-main">
+          <div className="sort-bar">
+            <span className="results-count">
+              {productosFiltrados.length} productos encontrados
+            </span>
+            
+            <div className="sort-controls">
+              <label className="sort-label">Ordenar por:</label>
+              <select
+                value={ordenar}
+                onChange={(e) => setOrdenar(e.target.value)}
+                className="sort-select"
+              >
+                <option value="nombre">Nombre</option>
+                <option value="precio-asc">Precio: Menor a Mayor</option>
+                <option value="precio-desc">Precio: Mayor a Menor</option>
+              </select>
             </div>
-          ))
-        ) : (
-          <div style={{
-            gridColumn: '1 / -1',
-            textAlign: 'center',
-            padding: '40px',
-            backgroundColor: 'white',
-            borderRadius: '8px'
-          }}>
-            <h3>😕 No se encontraron productos</h3>
-            <p style={{ color: '#666' }}>Intenta ajustar los filtros</p>
-            <button
-              onClick={limpiarFiltros}
-              style={{
-                marginTop: '15px',
-                padding: '10px 20px',
-                backgroundColor: '#dc3545',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontWeight: 'bold'
-              }}
-            >
-              Ver todos los productos
-            </button>
           </div>
-        )}
+
+          {productosFiltrados.length === 0 ? (
+            <div className="no-results">
+              <div className="no-results-icon">😕</div>
+              <h3>No se encontraron productos</h3>
+              <p>Intenta ajustar los filtros de búsqueda</p>
+              <button onClick={limpiarFiltros} className="btn-ver-todos">
+                Ver todos los productos
+              </button>
+            </div>
+          ) : (
+            <div className="productos-grid">
+              {productosFiltrados.map((producto) => (
+                <div key={producto.id} className="producto-card">
+                  <div className="producto-image-container">
+                    {producto.imagen?.url ? (
+                      <img
+                        src={`http://localhost:1337${producto.imagen.url}`}
+                        alt={producto.nombre}
+                        className="producto-image"
+                      />
+                    ) : (
+                      <span className="producto-emoji">🥩</span>
+                    )}
+                    
+                    <div className="producto-badge">
+                      {producto.categoria}
+                    </div>
+                  </div>
+
+                  <div className="producto-info">
+                    <h3 className="producto-nombre">{producto.nombre}</h3>
+
+                    <div className="producto-footer">
+                      <div className="producto-precio">
+                        ${producto.precio.toLocaleString()}
+                      </div>
+
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleAgregarAlCarrito(producto);
+                        }}
+                        className="btn-agregar"
+                      >
+                        Agregar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </main>
       </div>
-
-      {/* Paginación */}
-      {totalPaginas > 1 && (
-        <div style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          gap: '10px',
-          marginTop: '30px'
-        }}>
-          <button
-            onClick={() => cambiarPagina(paginaActual - 1)}
-            disabled={paginaActual === 1}
-            style={{
-              padding: '10px 20px',
-              backgroundColor: paginaActual === 1 ? '#ccc' : '#007bff',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: paginaActual === 1 ? 'not-allowed' : 'pointer',
-              fontWeight: 'bold'
-            }}
-          >
-            ← Anterior
-          </button>
-
-          <span style={{ color: 'white', fontWeight: 'bold' }}>
-            Página {paginaActual} de {totalPaginas}
-          </span>
-
-          <button
-            onClick={() => cambiarPagina(paginaActual + 1)}
-            disabled={paginaActual === totalPaginas}
-            style={{
-              padding: '10px 20px',
-              backgroundColor: paginaActual === totalPaginas ? '#ccc' : '#007bff',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: paginaActual === totalPaginas ? 'not-allowed' : 'pointer',
-              fontWeight: 'bold'
-            }}
-          >
-            Siguiente →
-          </button>
-        </div>
-      )}
     </div>
   );
 }
