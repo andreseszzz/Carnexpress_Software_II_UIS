@@ -135,8 +135,8 @@ export const crearDetallePedido = async (detalleData, token) => {
       data: {
         cantidad: detalleData.cantidad,
         subtotal: detalleData.subtotal,
-        pedido: detalleData.pedido
-        // NO enviar producto porque no existe esa relación
+        pedido: detalleData.pedido,
+        producto: detalleData.producto
       }
     }, {
       headers: {
@@ -147,7 +147,9 @@ export const crearDetallePedido = async (detalleData, token) => {
     console.log('✅ Detalle creado:', response.data);
     return response.data;
   } catch (error) {
-    console.error('❌ Error:', error.response?.data);
+    console.error('❌ Error completo:', error.response?.data);
+    console.error('❌ Mensaje:', error.response?.data?.error?.message);
+    console.error('❌ Detalles:', error.response?.data?.error?.details);
     throw error;
   }
 };
@@ -221,11 +223,15 @@ export const getPedidoDetalle = async (pedidoId, token) => {
 // Función para obtener los items de un pedido
 export const getDetallesPedido = async (pedidoId, token) => {
   try {
-    const response = await strapiAPI.get(`/detalle-pedidos?filters[pedido][id][$eq]=${pedidoId}&populate=*`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await strapiAPI.get(
+      `/detalle-pedidos?filters[pedido][id][$eq]=${pedidoId}&populate=producto`,  // ← Cambiar populate=* por populate=producto
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    console.log('📦 Detalles obtenidos para pedido', pedidoId, ':', response.data);
     return response.data;
   } catch (error) {
     console.error('Error al obtener detalles del pedido:', error);
@@ -306,6 +312,5 @@ export const subirImagen = async (file, token) => {
   return response.data;
 };
 
-
-
 export default strapiAPI;
+
