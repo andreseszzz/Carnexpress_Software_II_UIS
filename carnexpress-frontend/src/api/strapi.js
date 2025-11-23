@@ -22,6 +22,8 @@ export const getProductos = async () => {
 // Función para iniciar sesión
 export const loginUsuario = async (identifier, password) => {
   try {
+    console.log('📤 Intentando login con:', { identifier, password: '***' });
+    
     const response = await strapiAPI.post('/auth/local', {
       identifier,
       password,
@@ -29,6 +31,8 @@ export const loginUsuario = async (identifier, password) => {
     
     const token = response.data.jwt;
     const userId = response.data.user.id;
+    
+    console.log('✅ Login exitoso, obteniendo rol...');
     
     // Obtener información completa del usuario incluyendo el rol
     try {
@@ -38,20 +42,19 @@ export const loginUsuario = async (identifier, password) => {
         },
       });
       
-      console.log('Usuario completo con rol:', userWithRole.data);
+      console.log('✅ Usuario completo con rol:', userWithRole.data);
       
-      // Retornar con la información completa
       return {
         jwt: token,
         user: userWithRole.data
       };
     } catch (roleError) {
-      console.warn('No se pudo obtener el rol, usando datos básicos:', roleError);
-      // Si falla, retornar los datos básicos
+      console.warn('⚠️ No se pudo obtener el rol, usando datos básicos:', roleError);
       return response.data;
     }
   } catch (error) {
-    console.error('Error al iniciar sesión:', error);
+    console.error('❌ Error al iniciar sesión:', error);
+    console.error('❌ Detalles del error:', error.response?.data);
     throw error;
   }
 };
@@ -59,14 +62,12 @@ export const loginUsuario = async (identifier, password) => {
 // Función para registrar un nuevo usuario
 export const registrarUsuario = async (userData) => {
   try {
-    // Paso 1: Registrar con solo los campos básicos que Strapi acepta
     const response = await strapiAPI.post('/auth/local/register', {
       username: userData.username,
       email: userData.email,
       password: userData.password,
     });
 
-    // Paso 2: Si hay campos adicionales, actualizarlos usando el endpoint /users/me
     if (userData.nombre || userData.telefono || userData.direccion) {
       const token = response.data.jwt;
 
@@ -81,14 +82,12 @@ export const registrarUsuario = async (userData) => {
           },
         });
 
-        // Obtener los datos actualizados del usuario
         const updatedUser = await strapiAPI.get('/users/me', {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
 
-        // Retornar con los datos actualizados
         return {
           ...response.data,
           user: updatedUser.data
@@ -109,7 +108,7 @@ export const registrarUsuario = async (userData) => {
 // Función para crear un pedido
 export const crearPedido = async (pedidoData, token) => {
   try {
-    console.log('Datos del pedido a enviar:', pedidoData);
+    console.log('📤 Datos del pedido a enviar:', pedidoData);
     const response = await strapiAPI.post('/pedidos', {
       data: pedidoData
     }, {
@@ -119,9 +118,8 @@ export const crearPedido = async (pedidoData, token) => {
     });
     return response.data;
   } catch (error) {
-    console.error('Error al crear pedido:', error);
-    console.error('Detalles del error:', error.response?.data);
-    console.error('Error completo:', JSON.stringify(error.response?.data, null, 2));
+    console.error('❌ Error al crear pedido:', error);
+    console.error('❌ Detalles del error:', error.response?.data);
     throw error;
   }
 };
@@ -135,8 +133,8 @@ export const crearDetallePedido = async (detalleData, token) => {
       data: {
         cantidad: detalleData.cantidad,
         subtotal: detalleData.subtotal,
-        pedido: detalleData.pedido
-        // NO enviar producto porque no existe esa relación
+        pedido: detalleData.pedido,
+        producto: detalleData.producto
       }
     }, {
       headers: {
@@ -152,8 +150,6 @@ export const crearDetallePedido = async (detalleData, token) => {
   }
 };
 
-
-
 // Función para obtener los pedidos de un usuario
 export const getPedidosUsuario = async (userId, token) => {
   try {
@@ -168,6 +164,9 @@ export const getPedidosUsuario = async (userId, token) => {
     throw error;
   }
 };
+
+// Alias para compatibilidad
+export const getMisPedidos = getPedidosUsuario;
 
 // Función para obtener todos los pedidos (Admin)
 export const getAllPedidos = async (token) => {
@@ -187,21 +186,29 @@ export const getAllPedidos = async (token) => {
 // Función para actualizar el estado de un pedido (Admin)
 export const actualizarEstadoPedido = async (pedidoId, nuevoEstado, token) => {
   try {
-    const response = await strapiAPI.put(`/pedidos/${pedidoId}`, {
-      data: {
-        estado: nuevoEstado
+    console.log('📤 Actualizando pedido con documentId:', pedidoId);
+    console.log('📤 Nuevo estado:', nuevoEstado);
+    
+    // Usar documentId en la URL
+    const response = await strapiAPI.put(
+      `/pedidos/${pedidoId}`,
+      { data: { estado: nuevoEstado } },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
       }
-    }, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    );
+    
+    console.log('✅ Estado actualizado:', response.data);
     return response.data;
   } catch (error) {
-    console.error('Error al actualizar estado del pedido:', error);
+    console.error('❌ Error al actualizar estado:', error.response?.data);
     throw error;
   }
 };
+
 
 // Función para obtener detalles de un pedido específico con sus items
 export const getPedidoDetalle = async (pedidoId, token) => {
@@ -221,11 +228,15 @@ export const getPedidoDetalle = async (pedidoId, token) => {
 // Función para obtener los items de un pedido
 export const getDetallesPedido = async (pedidoId, token) => {
   try {
-    const response = await strapiAPI.get(`/detalle-pedidos?filters[pedido][id][$eq]=${pedidoId}&populate=*`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await strapiAPI.get(
+      `/detalle-pedidos?filters[pedido][id][$eq]=${pedidoId}&populate=producto`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    console.log('📦 Detalles obtenidos para pedido', pedidoId, ':', response.data);
     return response.data;
   } catch (error) {
     console.error('Error al obtener detalles del pedido:', error);
@@ -236,14 +247,12 @@ export const getDetallesPedido = async (pedidoId, token) => {
 // Función para obtener estadísticas de ventas (Admin)
 export const getEstadisticas = async (token) => {
   try {
-    // Obtener todos los pedidos con detalles
     const pedidos = await strapiAPI.get('/pedidos?populate=*', {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
 
-    // Obtener todos los detalles de pedidos con productos
     const detalles = await strapiAPI.get('/detalle-pedidos?populate=*', {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -305,7 +314,5 @@ export const subirImagen = async (file, token) => {
   });
   return response.data;
 };
-
-
 
 export default strapiAPI;

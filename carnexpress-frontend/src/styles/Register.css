@@ -1,0 +1,132 @@
+.register-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+  padding: 20px;
+}
+
+.register-card {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  width: 100%;
+  max-width: 500px;
+  padding: 50px 40px;
+  animation: slideUp 0.5s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.register-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.register-logo {
+  font-size: 64px;
+  margin-bottom: 15px;
+}
+
+.register-title {
+  font-size: 28px;
+  color: #333;
+  margin: 0 0 10px 0;
+  font-weight: bold;
+}
+
+.register-subtitle {
+  color: #666;
+  font-size: 14px;
+  margin: 0;
+}
+
+.register-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+.btn-register {
+  padding: 16px;
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  margin-top: 10px;
+}
+
+.btn-register:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(118, 75, 162, 0.3);
+}
+
+.btn-register:active {
+  transform: translateY(0);
+}
+
+.register-footer {
+  text-align: center;
+  margin-top: 30px;
+  padding-top: 30px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.register-footer p {
+  color: #666;
+  font-size: 14px;
+  margin: 0 0 10px 0;
+}
+
+.btn-login-link {
+  color: #764ba2;
+  font-weight: bold;
+  text-decoration: none;
+  transition: color 0.3s;
+}
+
+.btn-login-link:hover {
+  color: #667eea;
+  text-decoration: underline;
+}
+
+/* Responsive */
+@media screen and (max-width: 600px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .register-card {
+    padding: 40px 25px;
+  }
+
+  .register-title {
+    font-size: 24px;
+  }
+
+  .register-logo {
+    font-size: 48px;
+  }
+}

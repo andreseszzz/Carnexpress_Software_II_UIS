@@ -586,15 +586,15 @@ export interface ApiProductoProducto extends Struct.CollectionTypeSchema {
     draftAndPublish: true;
   };
   attributes: {
-    apariciones: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::detalle-pedido.detalle-pedido'
-    >;
     categoria: Schema.Attribute.String;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     descripcion: Schema.Attribute.Blocks;
+    detalle_pedidos: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::detalle-pedido.detalle-pedido'
+    >;
     imagen: Schema.Attribute.Media<'images' | 'files' | 'videos' | 'audios'>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
