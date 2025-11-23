@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
+import '../styles/Login.css';
 
 function Login() {
   const [identifier, setIdentifier] = useState('');
@@ -34,103 +35,60 @@ function Login() {
   };
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: '#f5f5f5',
-      padding: '20px'
-    }}>
-      <div style={{
-        backgroundColor: 'white',
-        padding: '40px',
-        borderRadius: '8px',
-        boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
-        width: '100%',
-        maxWidth: '400px'
-      }}>
-        <h2 style={{ textAlign: 'center', marginBottom: '30px', color: '#333' }}>
-          Iniciar Sesión
-        </h2>
+    <div className="login-container">
+      <div className="login-card">
+        <div className="login-header">
+          <div className="login-logo">🥩</div>
+          <h1 className="login-title">CARNEXPRESS</h1>
+          <p className="login-subtitle">Ingresa a tu cuenta</p>
+        </div>
 
-        {error && (
-          <div style={{
-            backgroundColor: '#f8d7da',
-            color: '#721c24',
-            padding: '12px',
-            borderRadius: '4px',
-            marginBottom: '20px',
-            border: '1px solid #f5c6cb'
-          }}>
-            {error}
-          </div>
-        )}
+        <form onSubmit={handleSubmit} className="login-form">
+          {error && (
+            <div className="error-message">
+              ⚠️ {error}
+            </div>
+          )}
 
-        <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
-              Email o Usuario
-            </label>
+          <div className="form-group">
+            <label className="form-label">Email o Usuario</label>
             <input
               type="text"
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
               placeholder="tu@email.com"
-              style={{
-                width: '100%',
-                padding: '12px',
-                borderRadius: '4px',
-                border: '1px solid #ddd',
-                fontSize: '14px'
-              }}
+              className="form-input"
+              autoComplete="username"
             />
           </div>
 
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
-              Contraseña
-            </label>
+          <div className="form-group">
+            <label className="form-label">Contraseña</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              style={{
-                width: '100%',
-                padding: '12px',
-                borderRadius: '4px',
-                border: '1px solid #ddd',
-                fontSize: '14px'
-              }}
+              className="form-input"
+              autoComplete="current-password"
             />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            style={{
-              width: '100%',
-              padding: '12px',
-              backgroundColor: loading ? '#ccc' : '#dc3545',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              fontSize: '16px',
-              fontWeight: 'bold',
-              cursor: loading ? 'not-allowed' : 'pointer'
-            }}
+            className="btn-login"
           >
-            {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
+            {loading ? 'Iniciando sesión...' : '🔑 Iniciar Sesión'}
           </button>
         </form>
 
-        <p style={{ textAlign: 'center', marginTop: '20px', color: '#666' }}>
-          ¿No tienes cuenta?{' '}
-          <Link to="/register" style={{ color: '#dc3545', fontWeight: 'bold' }}>
-            Regístrate aquí
+        <div className="login-footer">
+          <p>¿No tienes cuenta?</p>
+          <Link to="/register" className="btn-register-link">
+            Regístrate aquí →
           </Link>
-        </p>
+        </div>
       </div>
     </div>
   );

@@ -37,7 +37,7 @@
       "type": "boolean",
       "default": true
     },
-    "apariciones": {
+    "detalle_pedidos": {
       "type": "relation",
       "relation": "oneToMany",
       "target": "api::detalle-pedido.detalle-pedido",
