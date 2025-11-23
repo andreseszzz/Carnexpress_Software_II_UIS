@@ -1,149 +1,198 @@
+import { Link, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
-import { useNavigate } from 'react-router-dom';
+import CartDrawer from './CartDrawer';
 
 function Navbar() {
-  const { user, logout, isAuthenticated, isAdmin } = useAuth();
-  const { getCartCount } = useCart();
+  const { user, logout, isAdmin } = useAuth();
+  const { itemCount } = useCart();
   const navigate = useNavigate();
+  const [cartOpen, setCartOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
 
-  const cartCount = getCartCount();
+  if (!user) return null;
 
   return (
-    <nav style={{
-      backgroundColor: '#dc3545',
-      padding: '15px 20px',
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <h2 style={{ color: 'white', margin: 0, cursor: 'pointer' }}
-            onClick={() => navigate('/')}>
-          🥩 Carnexpress
-        </h2>
-      </div>
+    <>
+      <nav style={{
+        backgroundColor: '#1a1a1a',
+        color: 'white',
+        position: 'sticky',
+        top: 0,
+        zIndex: 100,
+        boxShadow: '0 2px 10px rgba(0,0,0,0.3)'
+      }}>
+        {/* Barra superior */}
+        <div style={{
+          backgroundColor: '#000',
+          padding: '8px 0',
+          fontSize: '13px'
+        }}>
+          <div style={{
+            maxWidth: '1200px',
+            margin: '0 auto',
+            padding: '0 20px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }}>
+            <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" style={{ color: 'white', textDecoration: 'none' }}>
+                📷 Instagram
+              </a>
+              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" style={{ color: 'white', textDecoration: 'none' }}>
+                📘 Facebook
+              </a>
+            </div>
+            <div style={{ color: '#ccc' }}>
+              Por compras superiores a 60 mil lleva tu domicilio a 3 mil
+            </div>
+          </div>
+        </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-        {isAuthenticated ? (
-          <>
-            {/* Icono del Carrito */}
-            <button 
-              onClick={() => navigate('/cart')}
+        {/* Navbar principal */}
+        <div style={{
+          maxWidth: '1200px',
+          margin: '0 auto',
+          padding: '15px 20px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          {/* Logo */}
+          <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{
+              width: '50px',
+              height: '50px',
+              backgroundColor: 'white',
+              borderRadius: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '24px'
+            }}>
+              🥩
+            </div>
+            <div>
+              <div style={{ color: 'white', fontSize: '20px', fontWeight: 'bold', lineHeight: 1 }}>
+                CARNEXPRESS
+              </div>
+              <div style={{ color: '#dc3545', fontSize: '11px', letterSpacing: '2px' }}>
+                QUALITY MEAT
+              </div>
+            </div>
+          </Link>
+
+          {/* Menú central */}
+          <div style={{ display: 'flex', gap: '30px', alignItems: 'center' }} className="desktop-only">
+            <Link to="/" style={{
+              color: 'white',
+              textDecoration: 'none',
+              fontWeight: '500',
+              borderBottom: '2px solid transparent',
+              paddingBottom: '5px',
+              transition: 'border-color 0.3s'
+            }}>
+              Inicio
+            </Link>
+            <Link to="/productos" style={{
+              color: 'white',
+              textDecoration: 'none',
+              fontWeight: '500',
+              borderBottom: '2px solid #dc3545',
+              paddingBottom: '5px'
+            }}>
+              Productos
+            </Link>
+            <Link to="/ofertas" style={{
+              color: 'white',
+              textDecoration: 'none',
+              fontWeight: '500',
+              borderBottom: '2px solid transparent',
+              paddingBottom: '5px',
+              transition: 'border-color 0.3s'
+            }}>
+              Ofertas
+            </Link>
+          </div>
+
+          {/* Acciones derecha */}
+          <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+            {/* Icono de usuario */}
+            <div style={{ position: 'relative', cursor: 'pointer' }}>
+              <div style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '50%',
+                backgroundColor: '#dc3545',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '20px'
+              }}>
+                👤
+              </div>
+            </div>
+
+            {/* Carrito */}
+            <button
+              onClick={() => setCartOpen(true)}
               style={{
                 position: 'relative',
-                padding: '8px 16px',
-                backgroundColor: 'white',
-                color: '#dc3545',
+                background: 'none',
                 border: 'none',
-                borderRadius: '4px',
                 cursor: 'pointer',
-                fontWeight: 'bold',
-                fontSize: '20px'
+                color: 'white',
+                fontSize: '24px'
               }}
             >
               🛒
-              {cartCount > 0 && (
+              {itemCount > 0 && (
                 <span style={{
                   position: 'absolute',
-                  top: '-5px',
-                  right: '-5px',
-                  backgroundColor: '#ffc107',
-                  color: '#000',
+                  top: '-8px',
+                  right: '-8px',
+                  backgroundColor: '#dc3545',
+                  color: 'white',
                   borderRadius: '50%',
-                  width: '24px',
-                  height: '24px',
+                  width: '22px',
+                  height: '22px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   fontSize: '12px',
                   fontWeight: 'bold'
                 }}>
-                  {cartCount}
+                  {itemCount}
                 </span>
               )}
             </button>
 
-            {/* Botón Mis Pedidos */}
-            <button 
-              onClick={() => navigate('/mis-pedidos')}
-              style={{
-                padding: '8px 16px',
-                backgroundColor: '#28a745',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontWeight: 'bold'
-              }}
-            >
-              📦 Mis Pedidos
-            </button>
-
-            <span style={{ color: 'white', fontWeight: 'bold' }}>
-              {isAdmin ? '👑 Admin' : '👤'} Hola, {user?.username || user?.nombre || 'Usuario'}
-            </span>
-            
             {isAdmin && (
-              <button onClick={() => navigate('/admin')} style={{
+              <Link to="/admin" style={{
                 padding: '8px 16px',
                 backgroundColor: '#ffc107',
                 color: '#000',
-                border: 'none',
+                textDecoration: 'none',
                 borderRadius: '4px',
-                cursor: 'pointer',
-                fontWeight: 'bold'
+                fontWeight: 'bold',
+                fontSize: '14px'
               }}>
-                Panel Admin
-              </button>
+                👑 Admin
+              </Link>
             )}
-            
-            <button onClick={handleLogout} style={{
-              padding: '8px 16px',
-              backgroundColor: 'white',
-              color: '#dc3545',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontWeight: 'bold'
-            }}>
-              Cerrar Sesión
-            </button>
-          </>
-        ) : (
-          <>
-            <button onClick={() => navigate('/login')} style={{
-              padding: '8px 16px',
-              backgroundColor: 'white',
-              color: '#dc3545',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontWeight: 'bold'
-            }}>
-              Iniciar Sesión
-            </button>
-            <button onClick={() => navigate('/register')} style={{
-              padding: '8px 16px',
-              backgroundColor: '#28a745',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontWeight: 'bold'
-            }}>
-              Registrarse
-            </button>
-          </>
-        )}
-      </div>
-    </nav>
+          </div>
+        </div>
+      </nav>
+
+      {/* Cart Drawer */}
+      <CartDrawer isOpen={cartOpen} onClose={() => setCartOpen(false)} />
+    </>
   );
 }
 

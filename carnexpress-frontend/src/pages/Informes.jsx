@@ -8,6 +8,9 @@ import {
   XAxis, YAxis, CartesianGrid, 
   Tooltip, Legend, ResponsiveContainer 
 } from 'recharts';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 
 function Informes() {
   const { user, token, isAdmin } = useAuth();
@@ -21,14 +24,12 @@ function Informes() {
     productosVendidos: []
   });
 
-  // Verificar que sea admin
   useEffect(() => {
     if (!isAdmin) {
       navigate('/');
     }
   }, [isAdmin, navigate]);
 
-  // Cargar estadísticas
   useEffect(() => {
     const fetchEstadisticas = async () => {
       try {
@@ -87,7 +88,99 @@ function Informes() {
     }
   }, [token]);
 
-  // Colores para las gráficas
+  // Exportar a PDF
+  const exportarPDF = () => {
+    const doc = new jsPDF();
+    
+    // Título
+    doc.setFontSize(20);
+    doc.text('Carnexpress - Informe de Ventas', 14, 20);
+    
+    // Fecha
+    doc.setFontSize(10);
+    doc.text(`Generado: ${new Date().toLocaleDateString('es-CO')}`, 14, 28);
+    
+    // Resumen
+    doc.setFontSize(14);
+    doc.text('Resumen General', 14, 40);
+    doc.setFontSize(10);
+    doc.text(`Total de Ventas: $${estadisticas.totalVentas.toLocaleString('es-CO')} COP`, 14, 48);
+    doc.text(`Total de Pedidos: ${estadisticas.totalPedidos}`, 14, 54);
+    doc.text(`Pedidos Entregados: ${estadisticas.pedidosPorEstado.entregado || 0}`, 14, 60);
+    
+    // Tabla de productos más vendidos
+    doc.text('Productos Más Vendidos', 14, 75);
+    
+    const tableData = estadisticas.productosVendidos.slice(0, 10).map((producto, index) => [
+      index + 1,
+      producto.nombre,
+      producto.cantidad,
+      `$${producto.total.toLocaleString('es-CO')}`
+    ]);
+    
+    doc.autoTable({
+      head: [['#', 'Producto', 'Cantidad', 'Total']],
+      body: tableData,
+      startY: 80,
+      theme: 'grid',
+      headStyles: { fillColor: [220, 53, 69] }
+    });
+    
+    // Guardar
+    doc.save(`informe-carnexpress-${new Date().toISOString().split('T')[0]}.pdf`);
+  };
+
+  // Exportar a Excel
+  const exportarExcel = () => {
+    // Crear hoja de resumen
+    const resumen = [
+      ['Carnexpress - Informe de Ventas'],
+      ['Generado:', new Date().toLocaleDateString('es-CO')],
+      [],
+      ['Resumen General'],
+      ['Total de Ventas:', `$${estadisticas.totalVentas.toLocaleString('es-CO')} COP`],
+      ['Total de Pedidos:', estadisticas.totalPedidos],
+      ['Pedidos Entregados:', estadisticas.pedidosPorEstado.entregado || 0],
+      ['Pedidos Pendientes:', (estadisticas.pedidosPorEstado.solicitado || 0) + (estadisticas.pedidosPorEstado.despachado || 0)],
+      []
+    ];
+
+    // Crear hoja de productos más vendidos
+    const productosData = [
+      ['Posición', 'Producto', 'Cantidad Vendida', 'Total Generado'],
+      ...estadisticas.productosVendidos.map((producto, index) => [
+        index + 1,
+        producto.nombre,
+        producto.cantidad,
+        producto.total
+      ])
+    ];
+
+    // Crear hoja de pedidos por estado
+    const estadosData = [
+      ['Estado', 'Cantidad', 'Porcentaje'],
+      ...Object.entries(estadisticas.pedidosPorEstado).map(([estado, cantidad]) => [
+        estado.charAt(0).toUpperCase() + estado.slice(1),
+        cantidad,
+        `${((cantidad / estadisticas.totalPedidos) * 100).toFixed(1)}%`
+      ])
+    ];
+
+    // Crear workbook
+    const wb = XLSX.utils.book_new();
+    
+    const wsResumen = XLSX.utils.aoa_to_sheet(resumen);
+    const wsProductos = XLSX.utils.aoa_to_sheet(productosData);
+    const wsEstados = XLSX.utils.aoa_to_sheet(estadosData);
+    
+    XLSX.utils.book_append_sheet(wb, wsResumen, 'Resumen');
+    XLSX.utils.book_append_sheet(wb, wsProductos, 'Productos');
+    XLSX.utils.book_append_sheet(wb, wsEstados, 'Estados');
+    
+    // Guardar
+    XLSX.writeFile(wb, `informe-carnexpress-${new Date().toISOString().split('T')[0]}.xlsx`);
+  };
+
   const COLORS = {
     solicitado: '#ffc107',
     despachado: '#17a2b8',
@@ -95,14 +188,12 @@ function Informes() {
     cancelado: '#dc3545'
   };
 
-  // Preparar datos para gráfica de pedidos por estado
   const dataPedidosEstado = Object.entries(estadisticas.pedidosPorEstado).map(([estado, cantidad]) => ({
     name: estado.charAt(0).toUpperCase() + estado.slice(1),
     value: cantidad,
     cantidad: cantidad
   }));
 
-  // Preparar datos para gráfica de productos más vendidos (top 5)
   const dataProductosVendidos = estadisticas.productosVendidos.slice(0, 5).map(producto => ({
     nombre: producto.nombre.length > 20 ? producto.nombre.substring(0, 20) + '...' : producto.nombre,
     cantidad: producto.cantidad
@@ -118,9 +209,51 @@ function Informes() {
 
   return (
     <div style={{ padding: '20px', maxWidth: '1400px', margin: '0 auto' }}>
-      <h1 style={{ color: 'white', marginBottom: '30px' }}>
-        📊 Informes y Estadísticas
-      </h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+        <h1 style={{ color: 'white', margin: 0 }}>
+          📊 Informes y Estadísticas
+        </h1>
+        
+        {/* Botones de Exportación */}
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button
+            onClick={exportarPDF}
+            style={{
+              padding: '12px 24px',
+              backgroundColor: '#dc3545',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+              fontSize: '14px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}
+          >
+            📄 Exportar PDF
+          </button>
+          <button
+            onClick={exportarExcel}
+            style={{
+              padding: '12px 24px',
+              backgroundColor: '#28a745',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+              fontSize: '14px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}
+          >
+            📊 Exportar Excel
+          </button>
+        </div>
+      </div>
 
       {/* Cards de Resumen */}
       <div style={{
@@ -201,7 +334,6 @@ function Informes() {
         gap: '20px',
         marginBottom: '20px'
       }}>
-        {/* Gráfica Circular - Pedidos por Estado */}
         <div style={{
           backgroundColor: 'white',
           padding: '30px',
@@ -230,7 +362,6 @@ function Informes() {
           </ResponsiveContainer>
         </div>
 
-        {/* Gráfica de Barras - Productos Más Vendidos */}
         <div style={{
           backgroundColor: 'white',
           padding: '30px',

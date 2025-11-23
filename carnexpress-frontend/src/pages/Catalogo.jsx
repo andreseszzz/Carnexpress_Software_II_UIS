@@ -4,72 +4,75 @@ import { useCart } from '../context/CartContext';
 
 function Catalogo() {
   const [productos, setProductos] = useState([]);
-  const [productosFiltrados, setProductosFiltrados] = useState([]);
+  const [busqueda, setBusqueda] = useState('');
+  const [categoriaSeleccionada, setCategoriaSeleccionada] = useState('todas');
+  const [precioMaximo, setPrecioMaximo] = useState(100000);
+  const [categorias, setCategorias] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   
-  // Estados para los filtros
-  const [filtroCategoria, setFiltroCategoria] = useState('todos');
-  const [filtroPrecioMax, setFiltroPrecioMax] = useState(100000);
-  const [filtroDisponibilidad, setFiltroDisponibilidad] = useState(false);
-
-  // Hook del carrito
+  // Estados de paginación
+  const [paginaActual, setPaginaActual] = useState(1);
+  const productosPorPagina = 6;
+  
   const { addToCart } = useCart();
 
-  // Cargar productos al iniciar
   useEffect(() => {
     const fetchProductos = async () => {
       try {
         const data = await getProductos();
-        if (data && data.data && Array.isArray(data.data)) {
+        if (data && data.data) {
           setProductos(data.data);
-          setProductosFiltrados(data.data);
-        } else {
-          setError('No se encontraron productos');
+          
+          const cats = [...new Set(data.data.map(p => p.categoria))];
+          setCategorias(cats);
         }
         setLoading(false);
       } catch (error) {
-        console.error('Error:', error);
-        setError('Error al cargar productos');
+        console.error('Error al cargar productos:', error);
         setLoading(false);
       }
     };
+
     fetchProductos();
   }, []);
 
-  // Aplicar filtros cuando cambian
-  useEffect(() => {
-    let resultado = [...productos];
-
-    // Filtro por categoría
-    if (filtroCategoria !== 'todos') {
-      resultado = resultado.filter(p => p.categoria === filtroCategoria);
-    }
-
-    // Filtro por precio
-    resultado = resultado.filter(p => p.precio <= filtroPrecioMax);
-
-    // Filtro por disponibilidad
-    if (filtroDisponibilidad) {
-      resultado = resultado.filter(p => p.stock === true);
-    }
-
-    setProductosFiltrados(resultado);
-  }, [productos, filtroCategoria, filtroPrecioMax, filtroDisponibilidad]);
-
-  // Limpiar todos los filtros
-  const limpiarFiltros = () => {
-    setFiltroCategoria('todos');
-    setFiltroPrecioMax(100000);
-    setFiltroDisponibilidad(false);
-  };
-
-  // Función para agregar al carrito
-  const handleAddToCart = (producto) => {
+  const handleAgregarAlCarrito = (producto) => {
     addToCart(producto);
-    // Mostrar notificación simple
     alert(`✅ ${producto.nombre} agregado al carrito`);
   };
+
+  const limpiarFiltros = () => {
+    setBusqueda('');
+    setCategoriaSeleccionada('todas');
+    setPrecioMaximo(100000);
+    setPaginaActual(1);
+  };
+
+  // Filtrar productos
+  const productosFiltrados = productos.filter(producto => {
+    const cumpleBusqueda = producto.nombre.toLowerCase().includes(busqueda.toLowerCase());
+    const cumpleCategoria = categoriaSeleccionada === 'todas' || producto.categoria === categoriaSeleccionada;
+    const cumplePrecio = producto.precio <= precioMaximo;
+    
+    return cumpleBusqueda && cumpleCategoria && cumplePrecio;
+  });
+
+  // Calcular paginación
+  const indexUltimo = paginaActual * productosPorPagina;
+  const indexPrimero = indexUltimo - productosPorPagina;
+  const productosPaginados = productosFiltrados.slice(indexPrimero, indexUltimo);
+  const totalPaginas = Math.ceil(productosFiltrados.length / productosPorPagina);
+
+  // Cambiar de página
+  const cambiarPagina = (numeroPagina) => {
+    setPaginaActual(numeroPagina);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Resetear a página 1 cuando cambian los filtros
+  useEffect(() => {
+    setPaginaActual(1);
+  }, [busqueda, categoriaSeleccionada, precioMaximo]);
 
   if (loading) {
     return (
@@ -79,164 +82,138 @@ function Catalogo() {
     );
   }
 
-  if (error) {
-    return (
-      <div style={{ padding: '20px', color: 'red', textAlign: 'center' }}>
-        <h2>{error}</h2>
-      </div>
-    );
-  }
-
   return (
-    <div style={{ 
-      padding: '20px',
-      maxWidth: '1400px',
-      margin: '0 auto'
-    }}>
-      <h1 style={{ 
-        color: 'white', 
-        textAlign: 'center',
-        marginBottom: '30px'
-      }}>
+    <div style={{ padding: '20px', maxWidth: '1400px', margin: '0 auto' }}>
+      <h1 style={{ color: 'white', marginBottom: '20px' }}>
         🥩 Carnexpress - Catálogo de Productos
       </h1>
 
-      {/* Panel de Filtros */}
       <div style={{
         backgroundColor: 'white',
         padding: '20px',
         borderRadius: '8px',
-        marginBottom: '30px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+        marginBottom: '20px',
+        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
       }}>
-        <h3 style={{ marginTop: 0 }}>Filtros</h3>
+        <h3 style={{ marginTop: 0 }}>🔍 Filtros</h3>
         
-        <div style={{ 
-          display: 'grid', 
+        <div style={{
+          display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-          gap: '20px'
+          gap: '15px',
+          marginBottom: '15px'
         }}>
-          {/* Filtro por Categoría */}
           <div>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
-              Tipo de Carne:
+            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+              Buscar:
             </label>
-            <select 
-              value={filtroCategoria}
-              onChange={(e) => setFiltroCategoria(e.target.value)}
+            <input
+              type="text"
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+              placeholder="Buscar producto..."
               style={{
                 width: '100%',
-                padding: '8px',
+                padding: '10px',
+                fontSize: '14px',
                 borderRadius: '4px',
-                border: '1px solid #ccc',
-                fontSize: '14px'
+                border: '2px solid #ddd',
+                boxSizing: 'border-box'
+              }}
+            />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+              Categoría:
+            </label>
+            <select
+              value={categoriaSeleccionada}
+              onChange={(e) => setCategoriaSeleccionada(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '10px',
+                fontSize: '14px',
+                borderRadius: '4px',
+                border: '2px solid #ddd'
               }}
             >
-              <option value="todos">Todos</option>
-              <option value="res">Res</option>
-              <option value="cerdo">Cerdo</option>
-              <option value="pollo">Pollo</option>
-              <option value="pescado">Pescado</option>
-              <option value="embutidos">Embutidos</option>
+              <option value="todas">Todas</option>
+              {categorias.map(cat => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
             </select>
           </div>
 
-          {/* Filtro por Precio */}
           <div>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
-              Precio máximo: ${filtroPrecioMax.toLocaleString('es-CO')}
+            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+              Precio máximo: ${precioMaximo.toLocaleString()}
             </label>
-            <input 
+            <input
               type="range"
               min="0"
               max="100000"
               step="5000"
-              value={filtroPrecioMax}
-              onChange={(e) => setFiltroPrecioMax(Number(e.target.value))}
+              value={precioMaximo}
+              onChange={(e) => setPrecioMaximo(Number(e.target.value))}
               style={{ width: '100%' }}
             />
           </div>
-
-          {/* Filtro por Disponibilidad */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <input 
-              type="checkbox"
-              id="disponibilidad"
-              checked={filtroDisponibilidad}
-              onChange={(e) => setFiltroDisponibilidad(e.target.checked)}
-              style={{ width: '20px', height: '20px', cursor: 'pointer' }}
-            />
-            <label htmlFor="disponibilidad" style={{ cursor: 'pointer', fontWeight: 'bold' }}>
-              Solo productos disponibles
-            </label>
-          </div>
         </div>
 
-        <button 
-          onClick={limpiarFiltros}
-          style={{
-            marginTop: '15px',
-            padding: '10px 20px',
-            backgroundColor: '#dc3545',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            fontWeight: 'bold'
-          }}
-        >
-          Limpiar Filtros
-        </button>
-
-        <p style={{ marginTop: '15px', color: '#666' }}>
-          Mostrando {productosFiltrados.length} de {productos.length} productos
-        </p>
+        <div>
+          <button
+            onClick={limpiarFiltros}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: '#dc3545',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+              marginRight: '10px'
+            }}
+          >
+            Limpiar Filtros
+          </button>
+          <span style={{ color: '#666' }}>
+            Mostrando {productosFiltrados.length} productos
+          </span>
+        </div>
       </div>
 
-      {/* Grid de Productos */}
-      {productosFiltrados.length === 0 ? (
-        <div style={{ 
-          textAlign: 'center', 
-          padding: '40px', 
-          backgroundColor: 'white',
-          borderRadius: '8px'
-        }}>
-          <h3>No se encontraron productos con estos filtros</h3>
-          <p>Intenta ajustar los criterios de búsqueda</p>
-        </div>
-      ) : (
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', 
-          gap: '20px'
-        }}>
-          {productosFiltrados.map((producto) => (
-            <div key={producto.id} style={{ 
-              border: '1px solid #ddd', 
-              padding: '20px', 
-              borderRadius: '8px',
-              backgroundColor: 'white',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-              transition: 'transform 0.2s',
-              cursor: 'pointer'
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
-            onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+        gap: '20px'
+      }}>
+        {productosPaginados.length > 0 ? (
+          productosPaginados.map((producto) => (
+            <div
+              key={producto.id}
+              style={{
+                backgroundColor: 'white',
+                borderRadius: '8px',
+                overflow: 'hidden',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                transition: 'transform 0.2s',
+                cursor: 'pointer'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
+              onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
             >
-              {/* Imagen del producto */}
               <div style={{
                 width: '100%',
-                height: '180px',
-                backgroundColor: '#f0f0f0',
-                borderRadius: '4px',
+                height: '220px',
+                backgroundColor: '#f5f5f5',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                marginBottom: '15px',
                 overflow: 'hidden'
               }}>
-                {producto.imagen && producto.imagen.url ? (
-                  <img 
+                {producto.imagen?.url ? (
+                  <img
                     src={`http://localhost:1337${producto.imagen.url}`}
                     alt={producto.nombre}
                     style={{
@@ -246,58 +223,125 @@ function Catalogo() {
                     }}
                   />
                 ) : (
-                  <div style={{ fontSize: '48px' }}>🥩</div>
+                  <span style={{ fontSize: '64px' }}>🥩</span>
                 )}
               </div>
 
-              <h3 style={{ marginTop: 0, marginBottom: '10px' }}>{producto.nombre}</h3>
-              
-              <p style={{ 
-                fontSize: '24px', 
-                color: '#28a745', 
-                fontWeight: 'bold',
-                margin: '10px 0'
-              }}>
-                ${producto.precio.toLocaleString('es-CO')} COP
-              </p>
-              
-              <p style={{ 
-                color: '#666',
-                textTransform: 'capitalize',
-                marginBottom: '10px'
-              }}>
-                📦 Categoría: {producto.categoria}
-              </p>
-              
-              <p style={{ 
-                display: 'flex',
-                alignItems: 'center',
-                gap: '5px',
-                fontWeight: 'bold',
-                color: producto.stock ? '#28a745' : '#dc3545'
-              }}>
-                {producto.stock ? '✅ Disponible' : '❌ Agotado'}
-              </p>
+              <div style={{ padding: '15px' }}>
+                <h3 style={{ margin: '0 0 8px 0', fontSize: '18px', color: '#333' }}>
+                  {producto.nombre}
+                </h3>
+                
+                <p style={{ margin: '0 0 12px 0', color: '#666', fontSize: '14px' }}>
+                  📦 {producto.categoria}
+                </p>
 
-              <button 
-                onClick={() => handleAddToCart(producto)}
-                style={{
-                  width: '100%',
-                  padding: '10px',
-                  backgroundColor: producto.stock ? '#007bff' : '#6c757d',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: producto.stock ? 'pointer' : 'not-allowed',
-                  fontWeight: 'bold',
-                  marginTop: '10px'
-                }}
-                disabled={!producto.stock}
-              >
-                {producto.stock ? 'Agregar al Carrito' : 'No Disponible'}
-              </button>
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginTop: '12px'
+                }}>
+                  <span style={{
+                    fontSize: '24px',
+                    fontWeight: 'bold',
+                    color: '#28a745'
+                  }}>
+                    ${producto.precio.toLocaleString()}
+                  </span>
+
+                  <button
+                    onClick={() => handleAgregarAlCarrito(producto)}
+                    style={{
+                      padding: '10px 20px',
+                      backgroundColor: '#dc3545',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontWeight: 'bold',
+                      fontSize: '14px'
+                    }}
+                  >
+                    🛒 Agregar
+                  </button>
+                </div>
+              </div>
             </div>
-          ))}
+          ))
+        ) : (
+          <div style={{
+            gridColumn: '1 / -1',
+            textAlign: 'center',
+            padding: '40px',
+            backgroundColor: 'white',
+            borderRadius: '8px'
+          }}>
+            <h3>😕 No se encontraron productos</h3>
+            <p style={{ color: '#666' }}>Intenta ajustar los filtros</p>
+            <button
+              onClick={limpiarFiltros}
+              style={{
+                marginTop: '15px',
+                padding: '10px 20px',
+                backgroundColor: '#dc3545',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontWeight: 'bold'
+              }}
+            >
+              Ver todos los productos
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Paginación */}
+      {totalPaginas > 1 && (
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          gap: '10px',
+          marginTop: '30px'
+        }}>
+          <button
+            onClick={() => cambiarPagina(paginaActual - 1)}
+            disabled={paginaActual === 1}
+            style={{
+              padding: '10px 20px',
+              backgroundColor: paginaActual === 1 ? '#ccc' : '#007bff',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: paginaActual === 1 ? 'not-allowed' : 'pointer',
+              fontWeight: 'bold'
+            }}
+          >
+            ← Anterior
+          </button>
+
+          <span style={{ color: 'white', fontWeight: 'bold' }}>
+            Página {paginaActual} de {totalPaginas}
+          </span>
+
+          <button
+            onClick={() => cambiarPagina(paginaActual + 1)}
+            disabled={paginaActual === totalPaginas}
+            style={{
+              padding: '10px 20px',
+              backgroundColor: paginaActual === totalPaginas ? '#ccc' : '#007bff',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: paginaActual === totalPaginas ? 'not-allowed' : 'pointer',
+              fontWeight: 'bold'
+            }}
+          >
+            Siguiente →
+          </button>
         </div>
       )}
     </div>

@@ -1,27 +1,30 @@
-import { useCart } from '../context/CartContext';
 import { useNavigate } from 'react-router-dom';
+import { useCart } from '../context/CartContext';
 
 function Cart() {
-  const { cartItems, removeFromCart, updateQuantity, clearCart, getCartTotal } = useCart();
   const navigate = useNavigate();
+  const { items = [], total = 0, removeFromCart, updateQuantity } = useCart();
 
-  if (cartItems.length === 0) {
+  const handleContinuarComprando = () => {
+    navigate('/');
+  };
+
+  const handleProcederCheckout = () => {
+    navigate('/checkout');
+  };
+
+  if (items.length === 0) {
     return (
-      <div style={{
-        minHeight: '80vh',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '20px'
-      }}>
-        <h2 style={{ color: 'white', marginBottom: '20px' }}>
-          Tu carrito está vacío
-        </h2>
+      <div style={{ padding: '20px', textAlign: 'center', color: 'white' }}>
+        <h2>Tu carrito está vacío</h2>
+        <p style={{ marginTop: '20px', fontSize: '16px' }}>
+          ¡Agrega productos desde nuestro catálogo!
+        </p>
         <button
-          onClick={() => navigate('/')}
+          onClick={handleContinuarComprando}
           style={{
-            padding: '12px 24px',
+            marginTop: '20px',
+            padding: '10px 20px',
             backgroundColor: '#dc3545',
             color: 'white',
             border: 'none',
@@ -38,233 +41,177 @@ function Cart() {
   }
 
   return (
-    <div style={{
-      padding: '20px',
-      maxWidth: '1200px',
-      margin: '0 auto'
-    }}>
-      <h1 style={{ color: 'white', marginBottom: '30px' }}>
+    <div style={{ padding: '20px', maxWidth: '1000px', margin: '0 auto' }}>
+      <h1 style={{ color: 'white', marginBottom: '20px' }}>
         🛒 Mi Carrito
       </h1>
 
       <div style={{
-        display: 'grid',
-        gridTemplateColumns: '2fr 1fr',
-        gap: '20px'
+        backgroundColor: 'white',
+        padding: '20px',
+        borderRadius: '8px',
+        marginBottom: '20px'
       }}>
-        {/* Lista de Productos */}
-        <div>
-          {cartItems.map((item) => (
-            <div key={item.id} style={{
-              backgroundColor: 'white',
-              padding: '20px',
-              borderRadius: '8px',
-              marginBottom: '15px',
-              display: 'grid',
-              gridTemplateColumns: '100px 1fr auto',
-              gap: '20px',
-              alignItems: 'center'
-            }}>
-              {/* Imagen */}
-              <div style={{
-                width: '100px',
-                height: '100px',
-                backgroundColor: '#f0f0f0',
-                borderRadius: '4px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                overflow: 'hidden'
-              }}>
-                {item.imagen && item.imagen.url ? (
-                  <img 
-                    src={`http://localhost:1337${item.imagen.url}`}
-                    alt={item.nombre}
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover'
-                    }}
-                  />
-                ) : (
-                  <div style={{ fontSize: '36px' }}>🥩</div>
-                )}
-              </div>
-
-              {/* Info del Producto */}
-              <div>
-                <h3 style={{ margin: '0 0 10px 0' }}>{item.nombre}</h3>
-                <p style={{ color: '#28a745', fontWeight: 'bold', fontSize: '18px', margin: '5px 0' }}>
-                  ${item.precio.toLocaleString('es-CO')} COP
-                </p>
-                <p style={{ color: '#666', textTransform: 'capitalize', margin: '5px 0' }}>
-                  Categoría: {item.categoria}
-                </p>
-              </div>
-
-              {/* Controles */}
-              <div style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '10px',
-                alignItems: 'center'
-              }}>
-                {/* Cantidad */}
+        {items.map((item) => (
+          <div key={item.id} style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            padding: '20px',
+            borderBottom: '1px solid #eee'
+          }}>
+            {/* Imagen del producto */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flex: 1 }}>
+              {item.imagen?.url ? (
+                <img
+                  src={`http://localhost:1337${item.imagen.url}`}
+                  alt={item.nombre}
+                  style={{
+                    width: '80px',
+                    height: '80px',
+                    objectFit: 'cover',
+                    borderRadius: '4px'
+                  }}
+                />
+              ) : (
                 <div style={{
+                  width: '80px',
+                  height: '80px',
+                  backgroundColor: '#f5f5f5',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '10px'
+                  justifyContent: 'center',
+                  borderRadius: '4px',
+                  fontSize: '32px'
                 }}>
-                  <button
-                    onClick={() => updateQuantity(item.id, item.cantidad - 1)}
-                    style={{
-                      width: '30px',
-                      height: '30px',
-                      backgroundColor: '#dc3545',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      fontWeight: 'bold'
-                    }}
-                  >
-                    -
-                  </button>
-                  <span style={{ fontWeight: 'bold', fontSize: '18px', minWidth: '30px', textAlign: 'center' }}>
-                    {item.cantidad}
-                  </span>
-                  <button
-                    onClick={() => updateQuantity(item.id, item.cantidad + 1)}
-                    style={{
-                      width: '30px',
-                      height: '30px',
-                      backgroundColor: '#28a745',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      fontWeight: 'bold'
-                    }}
-                  >
-                    +
-                  </button>
+                  🥩
                 </div>
-
-                {/* Subtotal */}
-                <p style={{ fontWeight: 'bold', margin: '5px 0' }}>
-                  ${(item.precio * item.cantidad).toLocaleString('es-CO')}
+              )}
+              
+              <div>
+                <h3 style={{ margin: '0 0 5px 0' }}>{item.nombre}</h3>
+                <p style={{ margin: 0, color: '#666' }}>
+                  ${item.precio.toLocaleString('es-CO')} COP
                 </p>
+              </div>
+            </div>
 
-                {/* Eliminar */}
+            {/* Controles de cantidad */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <button
-                  onClick={() => removeFromCart(item.id)}
+                  onClick={() => updateQuantity(item.id, item.cantidad - 1)}
                   style={{
-                    padding: '5px 15px',
+                    padding: '5px 12px',
                     backgroundColor: '#6c757d',
                     color: 'white',
                     border: 'none',
                     borderRadius: '4px',
                     cursor: 'pointer',
-                    fontSize: '12px'
+                    fontWeight: 'bold',
+                    fontSize: '16px'
                   }}
                 >
-                  Eliminar
+                  -
+                </button>
+                
+                <span style={{ fontWeight: 'bold', fontSize: '18px', minWidth: '30px', textAlign: 'center' }}>
+                  {item.cantidad}
+                </span>
+                
+                <button
+                  onClick={() => updateQuantity(item.id, item.cantidad + 1)}
+                  style={{
+                    padding: '5px 12px',
+                    backgroundColor: '#28a745',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontWeight: 'bold',
+                    fontSize: '16px'
+                  }}
+                >
+                  +
                 </button>
               </div>
-            </div>
-          ))}
-        </div>
 
-        {/* Resumen del Pedido */}
-        <div style={{
-          backgroundColor: 'white',
-          padding: '20px',
-          borderRadius: '8px',
-          height: 'fit-content',
-          position: 'sticky',
-          top: '20px'
-        }}>
-          <h3 style={{ marginTop: 0 }}>Resumen del Pedido</h3>
-          
-          <div style={{ borderTop: '1px solid #ddd', paddingTop: '15px', marginTop: '15px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-              <span>Subtotal:</span>
-              <span>${getCartTotal().toLocaleString('es-CO')} COP</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-              <span>Envío:</span>
-              <span style={{ color: '#28a745' }}>Gratis</span>
-            </div>
-            <div style={{ 
-              display: 'flex', 
-              justifyContent: 'space-between', 
-              marginTop: '15px',
-              paddingTop: '15px',
-              borderTop: '2px solid #333',
-              fontWeight: 'bold',
-              fontSize: '20px'
-            }}>
-              <span>Total:</span>
-              <span style={{ color: '#dc3545' }}>
-                ${getCartTotal().toLocaleString('es-CO')} COP
-              </span>
+              {/* Subtotal */}
+              <div style={{ minWidth: '120px', textAlign: 'right' }}>
+                <p style={{ margin: 0, fontWeight: 'bold', fontSize: '18px', color: '#28a745' }}>
+                  ${(item.precio * item.cantidad).toLocaleString('es-CO')}
+                </p>
+              </div>
+
+              {/* Botón Eliminar */}
+              <button
+                onClick={() => removeFromCart(item.id)}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: '#dc3545',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontWeight: 'bold'
+                }}
+              >
+                🗑️ Eliminar
+              </button>
             </div>
           </div>
+        ))}
+      </div>
+
+      {/* Resumen y Total */}
+      <div style={{
+        backgroundColor: 'white',
+        padding: '30px',
+        borderRadius: '8px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center'
+      }}>
+        <div>
+          <p style={{ margin: '0 0 10px 0', fontSize: '16px', color: '#666' }}>
+            Total de productos: {items.reduce((sum, item) => sum + item.cantidad, 0)}
+          </p>
+          <p style={{ margin: 0, fontSize: '28px', fontWeight: 'bold' }}>
+            TOTAL: <span style={{ color: '#28a745' }}>${total.toLocaleString('es-CO')} COP</span>
+          </p>
+        </div>
+
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button
+            onClick={handleContinuarComprando}
+            style={{
+              padding: '12px 24px',
+              backgroundColor: '#6c757d',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+              fontSize: '16px'
+            }}
+          >
+            Continuar Comprando
+          </button>
 
           <button
-            onClick={() => navigate('/checkout')}
+            onClick={handleProcederCheckout}
             style={{
-              width: '100%',
-              padding: '15px',
+              padding: '12px 24px',
               backgroundColor: '#28a745',
               color: 'white',
               border: 'none',
               borderRadius: '4px',
               cursor: 'pointer',
               fontWeight: 'bold',
-              fontSize: '16px',
-              marginTop: '20px'
+              fontSize: '16px'
             }}
           >
-            Proceder al Pago
-          </button>
-
-          <button
-            onClick={() => navigate('/')}
-            style={{
-              width: '100%',
-              padding: '12px',
-              backgroundColor: 'white',
-              color: '#dc3545',
-              border: '2px solid #dc3545',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontWeight: 'bold',
-              marginTop: '10px'
-            }}
-          >
-            Seguir Comprando
-          </button>
-
-          <button
-            onClick={() => {
-              if (window.confirm('¿Estás seguro de que quieres vaciar el carrito?')) {
-                clearCart();
-              }
-            }}
-            style={{
-              width: '100%',
-              padding: '10px',
-              backgroundColor: 'transparent',
-              color: '#6c757d',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '14px',
-              marginTop: '10px',
-              textDecoration: 'underline'
-            }}
-          >
-            Vaciar Carrito
+            Proceder al Pago →
           </button>
         </div>
       </div>
