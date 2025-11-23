@@ -126,24 +126,33 @@ export const crearPedido = async (pedidoData, token) => {
   }
 };
 
-// Función para crear detalles de pedido
+// Crear detalle de pedido
 export const crearDetallePedido = async (detalleData, token) => {
   try {
-    console.log('Datos del detalle a enviar:', detalleData);
+    console.log('📤 Creando detalle:', detalleData);
+    
     const response = await strapiAPI.post('/detalle-pedidos', {
-      data: detalleData
+      data: {
+        cantidad: detalleData.cantidad,
+        subtotal: detalleData.subtotal,
+        pedido: detalleData.pedido
+        // NO enviar producto porque no existe esa relación
+      }
     }, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
+    
+    console.log('✅ Detalle creado:', response.data);
     return response.data;
   } catch (error) {
-    console.error('Error al crear detalle de pedido:', error);
-    console.error('Detalles del error:', JSON.stringify(error.response?.data, null, 2));
+    console.error('❌ Error:', error.response?.data);
     throw error;
   }
 };
+
+
 
 // Función para obtener los pedidos de un usuario
 export const getPedidosUsuario = async (userId, token) => {
@@ -250,6 +259,53 @@ export const getEstadisticas = async (token) => {
     throw error;
   }
 };
+
+// ============= CRUD DE PRODUCTOS (ADMIN) =============
+
+// Crear producto
+export const crearProducto = async (productoData, token) => {
+  const response = await strapiAPI.post('/productos', { data: productoData }, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return response.data;
+};
+
+// Actualizar producto
+export const actualizarProducto = async (id, productoData, token) => {
+  const response = await strapiAPI.put(`/productos/${id}`, { data: productoData }, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return response.data;
+};
+
+// Eliminar producto
+export const eliminarProducto = async (id, token) => {
+  const response = await strapiAPI.delete(`/productos/${id}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return response.data;
+};
+
+// Subir imagen
+export const subirImagen = async (file, token) => {
+  const formData = new FormData();
+  formData.append('files', file);
+
+  const response = await strapiAPI.post('/upload', formData, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  return response.data;
+};
+
 
 
 export default strapiAPI;

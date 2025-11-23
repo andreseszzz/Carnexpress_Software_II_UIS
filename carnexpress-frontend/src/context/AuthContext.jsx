@@ -80,7 +80,6 @@ export const AuthProvider = ({ children }) => {
 
   // Verificar si el usuario es administrador
   const isAdmin = () => {
-    // Verificar por el campo isAdmin
     return user?.isAdmin === true;
   };
 

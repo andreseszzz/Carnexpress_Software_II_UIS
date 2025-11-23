@@ -122,8 +122,8 @@ function AdminPanel() {
         👑 Panel de Administración - Gestión de Pedidos
       </h1>
 
-      {/* Botón para ir a Informes */}
-      <div style={{ marginBottom: '20px' }}>
+      {/* Botones de Navegación */}
+      <div style={{ marginBottom: '20px', display: 'flex', gap: '10px' }}>
         <button
           onClick={() => navigate('/admin/informes')}
           style={{
@@ -138,6 +138,22 @@ function AdminPanel() {
           }}
         >
           📊 Ver Informes y Estadísticas
+        </button>
+        
+        <button
+          onClick={() => navigate('/admin/productos')}
+          style={{
+            padding: '12px 24px',
+            backgroundColor: '#28a745',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+            fontSize: '16px'
+          }}
+        >
+          📦 Gestionar Productos
         </button>
       </div>
 

@@ -1,26 +1,25 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
 import { crearPedido, crearDetallePedido } from '../api/strapi';
 
 function Checkout() {
-  const { cartItems, getCartTotal, clearCart } = useCart();
-  const { user, token } = useAuth();
   const navigate = useNavigate();
+  const { items = [], total = 0, clearCart } = useCart();
+  const { user, token } = useAuth();
 
-  const [formData, setFormData] = useState({
-    direccion: user?.direccion || '',
-    telefono: user?.telefono || '',
+  const [formulario, setFormulario] = useState({
+    direccion: '',
+    telefono: '',
     notas: ''
   });
 
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [procesando, setProcesando] = useState(false);
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
+    setFormulario({
+      ...formulario,
       [e.target.name]: e.target.value
     });
   };
@@ -28,87 +27,75 @@ function Checkout() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!formData.direccion || !formData.telefono) {
-      setError('Por favor completa la dirección y teléfono');
+    if (items.length === 0) {
+      alert('Tu carrito está vacío');
       return;
     }
 
-    if (cartItems.length === 0) {
-      setError('El carrito está vacío');
-      return;
-    }
-
-    setLoading(true);
-    setError('');
+    setProcesando(true);
 
     try {
-      const total = getCartTotal();
-
-      // Crear el pedido principal
+      // 1. Crear el pedido
       const pedidoData = {
-        cliente: user.id,
-        estado: 'solicitado',
         total: total,
-        direccion_entrega: formData.direccion,
-        telefono_contacto: formData.telefono,
-        notas: formData.notas || null
+        estado: 'solicitado',
+        direccion_entrega: formulario.direccion,
+        telefono_contacto: formulario.telefono,
+        notas: formulario.notas,
+        cliente: user.id
       };
 
-      const pedidoResponse = await crearPedido(pedidoData, token);
-      const pedidoId = pedidoResponse.data.id;
+      console.log('Creando pedido con:', pedidoData);
+      const pedidoCreado = await crearPedido(pedidoData, token);
+      console.log('✅ Pedido creado:', pedidoCreado);
 
-      // Crear los detalles del pedido (cada producto)
-      const detallesPromises = cartItems.map(item => {
+      // 2. Crear los detalles del pedido
+      for (const item of items) {
         const detalleData = {
-          pedido: pedidoId,
-          producto: item.id,
           cantidad: item.cantidad,
-          subtotal: item.precio * item.cantidad
+          subtotal: item.precio * item.cantidad,
+          pedido: pedidoCreado.data.id,
+          producto: item.id
         };
-        return crearDetallePedido(detalleData, token);
-      });
 
-      await Promise.all(detallesPromises);
+        console.log('Creando detalle con:', detalleData);
+        
+        try {
+          await crearDetallePedido(detalleData, token);
+          console.log('✅ Detalle creado para:', item.nombre);
+        } catch (error) {
+          console.error('❌ Error al crear detalle para:', item.nombre, error);
+        }
+      }
 
-      // Limpiar el carrito
+      // 3. Limpiar carrito y redirigir
       clearCart();
+      alert('✅ Pedido realizado exitosamente! Te contactaremos pronto.');
+      navigate('/mis-pedidos');
 
-      // Redirigir a página de confirmación
-      alert('✅ ¡Pedido realizado con éxito! Número de pedido: ' + pedidoId);
-      navigate('/');
-      
     } catch (error) {
-      console.error('Error al procesar pedido:', error);
-      setError('Error al procesar el pedido. Intenta de nuevo.');
+      console.error('❌ Error al procesar pedido:', error);
+      alert('❌ Error al procesar el pedido. Por favor intenta nuevamente.');
     } finally {
-      setLoading(false);
+      setProcesando(false);
     }
   };
 
-  if (cartItems.length === 0) {
+  if (items.length === 0) {
     return (
-      <div style={{
-        minHeight: '80vh',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '20px'
-      }}>
-        <h2 style={{ color: 'white', marginBottom: '20px' }}>
-          No tienes productos en el carrito
-        </h2>
+      <div style={{ padding: '20px', textAlign: 'center', color: 'white' }}>
+        <h2>Tu carrito está vacío</h2>
         <button
           onClick={() => navigate('/')}
           style={{
-            padding: '12px 24px',
+            marginTop: '20px',
+            padding: '10px 20px',
             backgroundColor: '#dc3545',
             color: 'white',
             border: 'none',
             borderRadius: '4px',
             cursor: 'pointer',
-            fontWeight: 'bold',
-            fontSize: '16px'
+            fontWeight: 'bold'
           }}
         >
           Ir al Catálogo
@@ -118,101 +105,83 @@ function Checkout() {
   }
 
   return (
-    <div style={{
-      padding: '20px',
-      maxWidth: '1200px',
-      margin: '0 auto'
-    }}>
-      <h1 style={{ color: 'white', marginBottom: '30px' }}>
-        📦 Confirmar Pedido
+    <div style={{ padding: '20px', maxWidth: '1000px', margin: '0 auto' }}>
+      <h1 style={{ color: 'white', marginBottom: '20px' }}>
+        🛒 Finalizar Compra
       </h1>
 
-      {error && (
-        <div style={{
-          backgroundColor: '#f8d7da',
-          color: '#721c24',
-          padding: '12px',
-          borderRadius: '4px',
-          marginBottom: '20px',
-          border: '1px solid #f5c6cb'
-        }}>
-          {error}
-        </div>
-      )}
-
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: '1fr 1fr',
-        gap: '20px'
-      }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
         {/* Formulario de Datos */}
         <div style={{
           backgroundColor: 'white',
           padding: '30px',
-          borderRadius: '8px'
+          borderRadius: '8px',
+          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
         }}>
           <h2 style={{ marginTop: 0 }}>Datos de Entrega</h2>
           
           <form onSubmit={handleSubmit}>
             <div style={{ marginBottom: '20px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
+              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
                 Dirección de Entrega *
               </label>
-              <textarea
+              <input
+                type="text"
                 name="direccion"
-                value={formData.direccion}
+                value={formulario.direccion}
                 onChange={handleChange}
-                placeholder="Calle 123 #45-67, Apartamento 301, Bogotá"
                 required
-                rows="3"
+                placeholder="Calle 123 #45-67, Barrio, Ciudad"
                 style={{
                   width: '100%',
                   padding: '10px',
                   borderRadius: '4px',
                   border: '1px solid #ddd',
                   fontSize: '14px',
-                  resize: 'vertical'
+                  boxSizing: 'border-box'
                 }}
               />
             </div>
 
             <div style={{ marginBottom: '20px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
+              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
                 Teléfono de Contacto *
               </label>
               <input
                 type="tel"
                 name="telefono"
-                value={formData.telefono}
+                value={formulario.telefono}
                 onChange={handleChange}
-                placeholder="3001234567"
                 required
-                style={{
-                  width: '100%',
-                  padding: '10px',
-                  borderRadius: '4px',
-                  border: '1px solid #ddd',
-                  fontSize: '14px'
-                }}
-              />
-            </div>
-
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
-                Notas adicionales (opcional)
-              </label>
-              <textarea
-                name="notas"
-                value={formData.notas}
-                onChange={handleChange}
-                placeholder="Ej: Tocar el timbre dos veces, entregar después de las 3pm..."
-                rows="3"
+                placeholder="3001234567"
                 style={{
                   width: '100%',
                   padding: '10px',
                   borderRadius: '4px',
                   border: '1px solid #ddd',
                   fontSize: '14px',
+                  boxSizing: 'border-box'
+                }}
+              />
+            </div>
+
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+                Notas Adicionales (opcional)
+              </label>
+              <textarea
+                name="notas"
+                value={formulario.notas}
+                onChange={handleChange}
+                rows="4"
+                placeholder="Instrucciones especiales para la entrega..."
+                style={{
+                  width: '100%',
+                  padding: '10px',
+                  borderRadius: '4px',
+                  border: '1px solid #ddd',
+                  fontSize: '14px',
+                  boxSizing: 'border-box',
                   resize: 'vertical'
                 }}
               />
@@ -220,114 +189,101 @@ function Checkout() {
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={procesando}
               style={{
                 width: '100%',
                 padding: '15px',
-                backgroundColor: loading ? '#ccc' : '#28a745',
+                backgroundColor: procesando ? '#ccc' : '#28a745',
                 color: 'white',
                 border: 'none',
                 borderRadius: '4px',
-                cursor: loading ? 'not-allowed' : 'pointer',
+                cursor: procesando ? 'not-allowed' : 'pointer',
                 fontWeight: 'bold',
                 fontSize: '16px'
               }}
             >
-              {loading ? 'Procesando...' : '✅ Confirmar Pedido'}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => navigate('/cart')}
-              style={{
-                width: '100%',
-                padding: '12px',
-                backgroundColor: 'white',
-                color: '#dc3545',
-                border: '2px solid #dc3545',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontWeight: 'bold',
-                marginTop: '10px'
-              }}
-            >
-              Volver al Carrito
+              {procesando ? 'Procesando...' : '✅ Confirmar Pedido'}
             </button>
           </form>
         </div>
 
         {/* Resumen del Pedido */}
-        <div>
-          <div style={{
-            backgroundColor: 'white',
-            padding: '20px',
-            borderRadius: '8px',
-            marginBottom: '20px'
-          }}>
-            <h3 style={{ marginTop: 0 }}>Resumen del Pedido</h3>
-            
-            {cartItems.map((item) => (
+        <div style={{
+          backgroundColor: 'white',
+          padding: '30px',
+          borderRadius: '8px',
+          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+          height: 'fit-content'
+        }}>
+          <h2 style={{ marginTop: 0 }}>Resumen del Pedido</h2>
+          
+          <div style={{ marginBottom: '20px' }}>
+            {items.map((item) => (
               <div key={item.id} style={{
                 display: 'flex',
                 justifyContent: 'space-between',
-                padding: '10px 0',
+                padding: '15px 0',
                 borderBottom: '1px solid #eee'
               }}>
                 <div>
                   <p style={{ margin: '0 0 5px 0', fontWeight: 'bold' }}>
                     {item.nombre}
                   </p>
-                  <p style={{ margin: 0, color: '#666', fontSize: '14px' }}>
-                    Cantidad: {item.cantidad} × ${item.precio.toLocaleString('es-CO')}
+                  <p style={{ margin: 0, fontSize: '14px', color: '#666' }}>
+                    Cantidad: {item.cantidad}
                   </p>
                 </div>
-                <p style={{ margin: 0, fontWeight: 'bold' }}>
-                  ${(item.precio * item.cantidad).toLocaleString('es-CO')}
-                </p>
+                <div style={{ textAlign: 'right' }}>
+                  <p style={{ margin: 0, fontWeight: 'bold', color: '#28a745' }}>
+                    ${(item.precio * item.cantidad).toLocaleString('es-CO')}
+                  </p>
+                </div>
               </div>
             ))}
+          </div>
 
+          <div style={{
+            borderTop: '2px solid #333',
+            paddingTop: '15px',
+            marginTop: '20px'
+          }}>
             <div style={{
-              marginTop: '20px',
-              paddingTop: '20px',
-              borderTop: '2px solid #333'
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center'
             }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-                <span>Subtotal:</span>
-                <span>${getCartTotal().toLocaleString('es-CO')} COP</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-                <span>Envío:</span>
-                <span style={{ color: '#28a745' }}>Gratis</span>
-              </div>
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                fontSize: '20px',
+              <span style={{ fontSize: '20px', fontWeight: 'bold' }}>
+                TOTAL:
+              </span>
+              <span style={{
+                fontSize: '28px',
                 fontWeight: 'bold',
-                marginTop: '15px',
-                paddingTop: '15px',
-                borderTop: '1px solid #ddd'
+                color: '#28a745'
               }}>
-                <span>Total:</span>
-                <span style={{ color: '#dc3545' }}>
-                  ${getCartTotal().toLocaleString('es-CO')} COP
-                </span>
-              </div>
+                ${total.toLocaleString('es-CO')} COP
+              </span>
             </div>
           </div>
 
           <div style={{
-            backgroundColor: '#f8f9fa',
+            marginTop: '20px',
             padding: '15px',
-            borderRadius: '8px',
-            border: '1px solid #dee2e6'
+            backgroundColor: '#f8f9fa',
+            borderRadius: '4px',
+            fontSize: '14px',
+            color: '#666'
           }}>
-            <p style={{ margin: '0 0 10px 0', fontSize: '14px', color: '#666' }}>
-              ℹ️ Al confirmar tu pedido, recibirás una notificación con el número de seguimiento.
+            <p style={{ margin: '0 0 10px 0', fontWeight: 'bold' }}>
+              📦 Información de Entrega:
             </p>
-            <p style={{ margin: 0, fontSize: '14px', color: '#666' }}>
-              🚚 Tiempo estimado de entrega: 24-48 horas
+            <p style={{ margin: '5px 0' }}>
+              • Tiempo estimado: 1-2 días hábiles
+            </p>
+            <p style={{ margin: '5px 0' }}>
+              • Te contactaremos para coordinar la entrega
+            </p>
+            <p style={{ margin: '5px 0' }}>
+              • Pago contra entrega
             </p>
           </div>
         </div>
