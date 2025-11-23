@@ -8,6 +8,12 @@ body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   transition: background-color 0.3s ease;
   overflow-x: hidden;
+  width: 100%;
+}
+
+#root {
+  width: 100%;
+  overflow-x: hidden;
 }
 
 /* Variables CSS */
@@ -23,38 +29,12 @@ body {
   --gray: #6c757d;
 }
 
-/* Responsive - Desktop first */
-@media (max-width: 1024px) {
-  html {
-    font-size: 14px;
-  }
-}
-
-@media (max-width: 768px) {
-  html {
-    font-size: 13px;
-  }
-  
-  .desktop-only {
-    display: none !important;
-  }
-  
-  .mobile-menu {
-    display: flex !important;
-  }
-}
-
-@media (max-width: 480px) {
-  html {
-    font-size: 12px;
-  }
-}
-
 /* Utilidades */
 .container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 20px;
+  width: 100%;
 }
 
 .flex-center {
@@ -99,4 +79,63 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #a02834;
+}
+
+/* Clases de visibilidad por defecto (desktop) */
+.desktop-only {
+  display: flex !important;
+}
+
+.menu-hamburguesa,
+.menu-movil {
+  display: none !important;
+}
+
+/* Tablet (1024px y menor) */
+@media screen and (max-width: 1024px) {
+  html {
+    font-size: 14px;
+  }
+  
+  .container {
+    padding: 0 15px;
+  }
+}
+
+/* Móvil (768px y menor) */
+@media screen and (max-width: 768px) {
+  html {
+    font-size: 13px;
+  }
+  
+  /* Ocultar elementos desktop */
+  .desktop-only {
+    display: none !important;
+  }
+  
+  /* Mostrar menú móvil */
+  .menu-hamburguesa {
+    display: block !important;
+  }
+  
+  .menu-movil {
+    display: block !important;
+  }
+  
+  .container {
+    padding: 0 10px;
+  }
+}
+
+/* Móvil pequeño (480px y menor) */
+@media screen and (max-width: 480px) {
+  html {
+    font-size: 12px;
+  }
+}
+
+/* Prevenir overflow horizontal */
+img {
+  max-width: 100%;
+  height: auto;
 }

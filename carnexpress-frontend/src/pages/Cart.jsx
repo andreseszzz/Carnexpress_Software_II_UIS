@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import '../styles/Cart.css';
 
 function Cart() {
   const navigate = useNavigate();
@@ -15,25 +16,12 @@ function Cart() {
 
   if (items.length === 0) {
     return (
-      <div style={{ padding: '20px', textAlign: 'center', color: 'white' }}>
+      <div className="cart-empty">
         <h2>Tu carrito está vacío</h2>
         <p style={{ marginTop: '20px', fontSize: '16px' }}>
           ¡Agrega productos desde nuestro catálogo!
         </p>
-        <button
-          onClick={handleContinuarComprando}
-          style={{
-            marginTop: '20px',
-            padding: '10px 20px',
-            backgroundColor: '#dc3545',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            fontWeight: 'bold',
-            fontSize: '16px'
-          }}
-        >
+        <button onClick={handleContinuarComprando} className="btn-catalogo">
           Ir al Catálogo
         </button>
       </div>
@@ -41,120 +29,55 @@ function Cart() {
   }
 
   return (
-    <div style={{ padding: '20px', maxWidth: '1000px', margin: '0 auto' }}>
-      <h1 style={{ color: 'white', marginBottom: '20px' }}>
-        🛒 Mi Carrito
-      </h1>
+    <div className="cart-container">
+      <h1 className="cart-title">🛒 Mi Carrito</h1>
 
-      <div style={{
-        backgroundColor: 'white',
-        padding: '20px',
-        borderRadius: '8px',
-        marginBottom: '20px'
-      }}>
+      <div className="cart-content">
         {items.map((item) => (
-          <div key={item.id} style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            padding: '20px',
-            borderBottom: '1px solid #eee'
-          }}>
-            {/* Imagen del producto */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flex: 1 }}>
+          <div key={item.id} className="cart-item">
+            <div className="cart-item-info">
               {item.imagen?.url ? (
                 <img
                   src={`http://localhost:1337${item.imagen.url}`}
                   alt={item.nombre}
-                  style={{
-                    width: '80px',
-                    height: '80px',
-                    objectFit: 'cover',
-                    borderRadius: '4px'
-                  }}
+                  className="cart-item-image"
                 />
               ) : (
-                <div style={{
-                  width: '80px',
-                  height: '80px',
-                  backgroundColor: '#f5f5f5',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  borderRadius: '4px',
-                  fontSize: '32px'
-                }}>
-                  🥩
-                </div>
+                <div className="cart-item-placeholder">🥩</div>
               )}
               
-              <div>
-                <h3 style={{ margin: '0 0 5px 0' }}>{item.nombre}</h3>
-                <p style={{ margin: 0, color: '#666' }}>
-                  ${item.precio.toLocaleString('es-CO')} COP
-                </p>
+              <div className="cart-item-details">
+                <h3>{item.nombre}</h3>
+                <p>${item.precio.toLocaleString('es-CO')} COP</p>
               </div>
             </div>
 
-            {/* Controles de cantidad */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div className="cart-item-controls">
+              <div className="quantity-controls">
                 <button
                   onClick={() => updateQuantity(item.id, item.cantidad - 1)}
-                  style={{
-                    padding: '5px 12px',
-                    backgroundColor: '#6c757d',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontWeight: 'bold',
-                    fontSize: '16px'
-                  }}
+                  className="btn-quantity"
                 >
                   -
                 </button>
                 
-                <span style={{ fontWeight: 'bold', fontSize: '18px', minWidth: '30px', textAlign: 'center' }}>
-                  {item.cantidad}
-                </span>
+                <span className="quantity-display">{item.cantidad}</span>
                 
                 <button
                   onClick={() => updateQuantity(item.id, item.cantidad + 1)}
-                  style={{
-                    padding: '5px 12px',
-                    backgroundColor: '#28a745',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontWeight: 'bold',
-                    fontSize: '16px'
-                  }}
+                  className="btn-quantity increase"
                 >
                   +
                 </button>
               </div>
 
-              {/* Subtotal */}
-              <div style={{ minWidth: '120px', textAlign: 'right' }}>
-                <p style={{ margin: 0, fontWeight: 'bold', fontSize: '18px', color: '#28a745' }}>
-                  ${(item.precio * item.cantidad).toLocaleString('es-CO')}
-                </p>
+              <div className="cart-item-subtotal">
+                <p>${(item.precio * item.cantidad).toLocaleString('es-CO')}</p>
               </div>
 
-              {/* Botón Eliminar */}
               <button
                 onClick={() => removeFromCart(item.id)}
-                style={{
-                  padding: '8px 16px',
-                  backgroundColor: '#dc3545',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontWeight: 'bold'
-                }}
+                className="btn-remove"
               >
                 🗑️ Eliminar
               </button>
@@ -163,54 +86,20 @@ function Cart() {
         ))}
       </div>
 
-      {/* Resumen y Total */}
-      <div style={{
-        backgroundColor: 'white',
-        padding: '30px',
-        borderRadius: '8px',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center'
-      }}>
-        <div>
-          <p style={{ margin: '0 0 10px 0', fontSize: '16px', color: '#666' }}>
-            Total de productos: {items.reduce((sum, item) => sum + item.cantidad, 0)}
-          </p>
-          <p style={{ margin: 0, fontSize: '28px', fontWeight: 'bold' }}>
-            TOTAL: <span style={{ color: '#28a745' }}>${total.toLocaleString('es-CO')} COP</span>
+      <div className="cart-summary">
+        <div className="summary-info">
+          <p>Total de productos: {items.reduce((sum, item) => sum + item.cantidad, 0)}</p>
+          <p className="summary-total">
+            TOTAL: <span className="summary-total-amount">${total.toLocaleString('es-CO')} COP</span>
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button
-            onClick={handleContinuarComprando}
-            style={{
-              padding: '12px 24px',
-              backgroundColor: '#6c757d',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontWeight: 'bold',
-              fontSize: '16px'
-            }}
-          >
+        <div className="summary-actions">
+          <button onClick={handleContinuarComprando} className="btn-continuar">
             Continuar Comprando
           </button>
 
-          <button
-            onClick={handleProcederCheckout}
-            style={{
-              padding: '12px 24px',
-              backgroundColor: '#28a745',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontWeight: 'bold',
-              fontSize: '16px'
-            }}
-          >
+          <button onClick={handleProcederCheckout} className="btn-checkout">
             Proceder al Pago →
           </button>
         </div>
